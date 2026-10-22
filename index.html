@@ -477,6 +477,7 @@ function toText(h){
       out.push('【 '+STREET_NAME[s]+' 】');
       out.push(''); // Flop/Turn/Riverの見出しのあとは1行空ける
       out.push(bk+' ('+bbf(sim.S[s].potStart)+')');
+      out.push(''); // ボードの行のあとも1行空ける
     }
     const groups = [];
     log.forEach(e => {
@@ -498,9 +499,10 @@ function toText(h){
         if(shown) out.push(p+' '+shown);
       });
     }
+    while(out.length && out[out.length-1]==='') out.pop(); // アクションがないときの余分な空行は消す
     blocks.push(out.join('\n'));
   });
-  return lines.join('\n')+'\n'+blocks.join('\n\n')+(h.memo.trim() ? '\n\n【 メモ欄 】\n'+h.memo.trim() : '');
+  return lines.join('\n')+'\n\n'+blocks.join('\n\n')+(h.memo.trim() ? '\n\n【 メモ欄 】\n'+h.memo.trim() : '');
 }
 
 /* ================= table view ================= */
