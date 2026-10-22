@@ -474,6 +474,7 @@ function toText(h){
     else{
       const bk = BOARD_KEYS[s].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
       out.push('【 '+STREET_NAME[s]+' 】');
+      out.push(''); // Flop/Turn/Riverの見出しのあとは1行空ける
       out.push(bk+' ('+bbf(sim.S[s].potStart)+')');
     }
     const groups = [];
