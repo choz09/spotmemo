@@ -1,0 +1,1510 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#141311">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SpotMemo">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icons/icon-192-v1.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon-v1.png">
+<title>SpotMemo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&family=Zen+Old+Mincho:wght@700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#141311; --ink2:#1c1a17; --ink3:#2a251d;
+  --gold:#c9a15c; --gold-2:#e4c483;
+  --soft:#d6cfc1; --muted:#b8b0a2;
+  --paper:#f7f4ec; --red:#b8382e; --back:#6b2d2a;
+  --felt:#2d6a4a; --wood:#b8874f; --rail:#24221f;
+  --mint:#8fc7b0; --warn:#dd8f84;
+  --r:8px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--ink);color:var(--soft);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-size:15px;line-height:1.6;word-break:auto-phrase;overflow-wrap:break-word}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;padding:0}
+button:disabled{cursor:default}
+.app{max-width:520px;margin:0 auto;padding:calc(6px + env(safe-area-inset-top)) 16px calc(52px + env(safe-area-inset-bottom))}
+header{padding:calc(12px + env(safe-area-inset-top)) 0 0}
+h1{margin:0;font-family:"Zen Old Mincho",serif;font-size:22px;color:var(--gold-2);letter-spacing:.06em}
+h2{margin:0 0 10px;font-size:14px;font-weight:500;color:var(--muted);letter-spacing:.08em}
+section{margin-top:22px}
+p{margin:0}
+
+/* controls */
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.seg{display:flex;background:var(--ink2);border-radius:var(--r);padding:3px;flex:1}
+.seg button{flex:1;white-space:nowrap;padding:11px 4px;border-radius:6px;color:var(--muted);font-size:14px}
+.seg button.on{background:var(--ink3);color:var(--gold-2);font-weight:700}
+.chip{padding:11px 16px;min-height:44px;border-radius:999px;background:var(--ink2);color:var(--soft);font-size:14px;min-width:44px;text-align:center}
+.chip.on{background:var(--gold);color:var(--ink);font-weight:700}
+label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
+input[type=text],input[type=search],input[type=number],textarea{width:100%;background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r);padding:11px 12px;font-size:16px;outline:none}
+input::placeholder,textarea::placeholder{color:#9a917f}
+input:focus,textarea:focus{border-color:var(--gold)}
+textarea{min-height:96px;resize:vertical}
+.grid{display:grid;gap:10px}
+.g4{grid-template-columns:repeat(4,1fr)}.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+.hint{margin-top:10px;font-size:14px;color:var(--soft)}
+.btns{display:flex;gap:10px;margin-top:24px}
+.btn{flex:1;padding:15px;border-radius:var(--r);font-weight:700;font-size:16px;background:var(--ink2);color:var(--soft)}
+.btn.main{background:var(--gold);color:var(--ink)}
+.btn.main:disabled{background:var(--ink3);color:var(--soft)}
+.btn.quiet{background:none;font-size:14px;font-weight:400;padding:12px}
+.btn.danger{color:var(--warn)}
+.btn.slim{flex:.5}
+
+/* cards */
+.card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--paper);color:var(--ink);border-radius:4px;width:34px;height:48px;font-weight:700;font-size:17px;line-height:1;gap:1px}
+.card i{font-style:normal;font-size:15px}
+.card.r{color:var(--red)}
+.card.sm{width:26px;height:38px;font-size:14px}
+.card.sm i{font-size:12px}
+.card.mini{width:26px;height:36px;font-size:14px}
+.card.mini i{font-size:12px}
+.card.tiny{width:18px;height:26px;font-size:12px}
+.card.tiny i{font-size:10px}
+.card.big{width:56px;height:78px;font-size:28px}
+.card.big i{font-size:24px}
+.slot{display:inline-flex;align-items:center;justify-content:center;background:var(--ink3);color:var(--muted);border-radius:4px;width:34px;height:48px;font-size:18px}
+.slot.sm{width:26px;height:38px}
+.slot.big{width:56px;height:78px;font-size:24px}
+.cback{display:inline-block;width:18px;height:26px;border-radius:3px;background:var(--back)}
+.hero-cards{display:flex;align-items:center;gap:8px;margin-top:10px}
+.hero-cards .lab{font-size:14px;color:var(--muted);margin-right:6px}
+
+/* table */
+.table{position:relative;width:100%;aspect-ratio:1/0.85;margin:6px 0 10px} /* 比率は APP_ASPECT と同じ */
+.felt{position:absolute;left:8%;top:27%;width:84%;height:46%;background:var(--felt);border:6px solid var(--wood);border-radius:999px;box-shadow:0 0 0 12px var(--rail)}
+.felt::after{content:'';position:absolute;inset:10px;border:1px solid rgba(247,244,236,.22);border-radius:999px}
+.mid{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:6px;width:62%}
+.pot{font-size:13px;color:var(--paper);font-weight:700;text-align:center;line-height:1.3;background:var(--rail);border-radius:8px;padding:3px 10px}
+.pot small{display:block;font-weight:400;font-size:13px;color:var(--soft)}
+.board{display:flex;gap:2px}
+.plate{position:absolute;transform:translate(-50%,-50%);width:60px;background:var(--ink3);border-radius:10px;padding:3px 0 2px;display:flex;flex-direction:column;align-items:center;gap:1px;border:3px solid transparent;color:var(--soft)}
+.plate .cs{display:flex;gap:2px;height:26px;align-items:center}
+.plate .lab{font-family:Cinzel,serif;font-weight:700;font-size:12px;line-height:1.15}
+.plate .stk{min-height:13px;font-size:12px;color:var(--muted);line-height:1.1}
+.plate.hero .lab{color:var(--gold-2)}
+.plate.hero::before{content:'HERO';position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:12px;font-weight:700;line-height:18px;padding:0 7px;border-radius:999px;letter-spacing:.04em}
+.plate.fold{opacity:.6;background:var(--ink2)}
+.plate.act{border-color:var(--gold);background:#4d3b20}
+.plate.act .lab{color:var(--gold-2)}
+.plate.sel{border-color:var(--gold)}
+.bet{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:12px;font-weight:700;color:var(--paper)}
+.bet::before{content:'';width:14px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 3px 0 #8a6a35}
+.lastact{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;font-size:12px;font-weight:700;line-height:16px;color:var(--gold-2);background:var(--ink);padding:0 6px;border-radius:6px;z-index:1}
+.dealer{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--paper);color:var(--ink);font-family:Cinzel,serif;font-weight:700;font-size:14px;line-height:26px;text-align:center;z-index:1}
+.tag-allin{font-size:12px;color:var(--warn);font-weight:700;line-height:1.1;min-height:13px}
+
+/* actions */
+.acts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:8px}
+.acts button{padding:11px 0;background:var(--ink2);border-radius:var(--r);color:var(--gold-2);font-weight:700;font-size:16px}
+.acts button:active{background:var(--ink3)}
+.turn{margin-top:2px;font-size:14px;color:var(--soft)}
+.turn b{background:var(--gold);color:var(--ink);font-family:Cinzel,serif;padding:2px 10px;border-radius:999px;margin-right:4px}
+.log{list-style:none;margin:10px 0 0;padding:0}
+.log li{display:flex;gap:10px;padding:6px 0;font-size:14px}
+.log li b{color:var(--gold-2);min-width:76px;font-family:Cinzel,serif;font-size:13px}
+.notice{margin-top:14px;padding:12px 14px;background:var(--ink2);border-radius:var(--r);font-size:14px}
+.notice b{color:var(--gold-2)}
+.panel{background:var(--ink2);border-radius:14px;padding:8px 12px 12px;margin-top:0}
+.panel section:first-of-type{margin-top:0}
+.phases{display:flex;gap:4px;overflow-x:auto;margin:0 -4px 8px}
+.phases button{flex:1;padding:9px 8px;border-radius:8px;color:var(--soft);font-size:13px;white-space:nowrap}
+.phases button.on{background:var(--ink3);color:var(--gold-2);font-weight:700}
+.phases button:disabled{color:#7d7568}
+.panel .seg{background:var(--ink)}
+.panel .seg button.on{background:var(--ink3)}
+.panel input[type=text],.panel input[type=search],.panel textarea{background:var(--ink)}
+.panel .chip,.panel .acts button,.panel .btn{background:var(--ink3)}
+.panel .chip.on,.panel .btn.main{background:var(--gold)}
+.panel .btn.main:disabled{background:var(--ink3)}
+.panel .btn.quiet{background:none}
+.panel .notice,.panel .text{background:var(--ink)}
+.turnrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px}
+.turnrow .turn{margin:0}
+.turnrow .chip{flex:none;white-space:nowrap}
+.sizes{display:flex;gap:8px;margin-top:8px;flex-wrap:wrap}
+.sizes .chip{padding:8px 12px}
+.logline{margin-top:6px;font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.navrow{display:flex;gap:8px;margin-top:6px}
+.navrow .btn{padding:12px}
+.navrow .chip{flex:none}
+
+/* tabs */
+nav.tabs{position:fixed;left:0;right:0;bottom:0;background:var(--ink2);padding-bottom:env(safe-area-inset-bottom);display:flex;z-index:5}
+nav.tabs button{flex:1;padding:13px 0;font-size:15px;color:var(--muted)}
+nav.tabs button.on{color:var(--gold-2);font-weight:700}
+
+/* list */
+.hand{display:block;width:100%;text-align:left;background:var(--ink2);border-radius:var(--r);padding:14px;margin-top:10px}
+.hand .top{display:flex;align-items:center;gap:10px}
+.hand .pos{font-family:Cinzel,serif;font-weight:700;color:var(--gold-2);font-size:14px}
+.hand .when{margin-left:auto;font-size:13px;color:var(--muted)}
+.hand .sub{margin-top:8px;font-size:13px;color:var(--muted)}
+.hand .bd{display:flex;gap:3px;margin-top:10px}
+.hand .memo{margin-top:10px;font-size:14px;color:var(--soft);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tags{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.tag{font-size:13px;color:var(--gold-2);background:var(--ink3);padding:2px 9px;border-radius:999px}
+.res-win{color:var(--mint)}.res-lose{color:var(--warn)}.res-split{color:var(--soft)}
+.count{font-size:13px;color:var(--muted);margin-top:14px}
+.empty{color:var(--muted);font-size:13px;margin-top:12px}
+.text{white-space:pre-wrap;font-size:14px;background:var(--ink2);border-radius:var(--r);padding:12px 14px;line-height:1.7}
+
+/* sheet */
+.back{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:20;display:flex;align-items:flex-end;justify-content:center}
+.sheet{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--ink);border-radius:14px 14px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
+.sheet h3{margin:0 0 14px;font-family:"Zen Old Mincho",serif;font-size:18px;color:var(--gold-2)}
+.picker{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px}
+.picker button{height:52px;background:var(--paper);color:var(--ink);border-radius:3px;font-weight:700;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.picker button i{font-style:normal;font-size:15px}
+.picker button.r{color:var(--red)}
+.rival{display:flex;align-items:center;gap:6px}
+.rival .lab{min-width:46px;font-size:13px;color:var(--soft);font-family:Cinzel,serif;font-weight:700}
+.picker button:disabled{opacity:.18}
+.picker button.cur{background:var(--gold-2)}
+.rpctl{display:flex;gap:8px;justify-content:center;margin-top:10px}
+input[type=range]{display:block;width:100%;margin:10px 0 0;accent-color:var(--gold)}
+.rp{display:block;margin:0 auto;height:min(62vh,640px);aspect-ratio:9/16;max-width:100%;background:var(--ink);border-radius:var(--r)}
+.sheet .btn{background:var(--ink3)}
+.sheet .btn.main{background:var(--gold)}
+.sheet .btn.quiet{background:none}
+.meter{height:10px;background:#4a4132;border-radius:5px;margin-top:16px;overflow:hidden}
+.meter div{height:100%;width:0;background:var(--gold)}
+.toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink3);color:var(--gold-2);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;max-width:90%;text-align:center}
+</style>
+</head>
+<body>
+<div class="app">
+    <main id="view"></main>
+</div>
+<nav class="tabs" id="tabs"></nav>
+<div id="layer"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ================= constants ================= */
+// 各リストはプリフロップのアクション順(UTG → … → SB → BB)
+const POS = {
+  2:['SB','BB'],
+  3:['BTN','SB','BB'],
+  4:['CO','BTN','SB','BB'],
+  5:['UTG','CO','BTN','SB','BB'],
+  6:['UTG','HJ','CO','BTN','SB','BB'],
+  7:['UTG','LJ','HJ','CO','BTN','SB','BB'],
+  8:['UTG','UTG+1','LJ','HJ','CO','BTN','SB','BB'],
+  9:['UTG','UTG+1','MP','LJ','HJ','CO','BTN','SB','BB']
+};
+const STEPS = [['setup','設定'],['pre','Preflop'],['flop','Flop'],['turn','Turn'],['river','River'],['sum','保存']];
+const STREETS = ['pre','flop','turn','river'];
+const STREET_NAME = {pre:'Preflop',flop:'Flop',turn:'Turn',river:'River'};
+const BOARD_KEYS = {flop:['b0','b1','b2'],turn:['b3'],river:['b4']};
+const BOARD_LEN = {pre:0,flop:3,turn:4,river:5};
+const RESULTS = [['win','勝ち'],['lose','負け'],['split','分け'],['','未定']];
+const PRESET_TAGS = ['迷った','ミスかも','うまくいった','ブラフ','バリュー','3bet pot','オールイン','リバー判断','ICM'];
+const RANKS = 'AKQJT98765432';
+const SUITS = {s:'♠',h:'♥',d:'♦',c:'♣'};
+const SLOT_GROUPS = [['h0','h1'],['b0','b1','b2'],['b3'],['b4']];
+const SLOT_NAMES = {h0:'Hero 1枚目',h1:'Hero 2枚目',b0:'フロップ 1枚目',b1:'フロップ 2枚目',b2:'フロップ 3枚目',b3:'ターン',b4:'リバー'};
+const SETUP_FIELDS = ['sb','bb','ante','stack'];
+const KEY_HANDS = 'pokermemo.hands.v2';
+const KEY_DRAFT = 'pokermemo.draft.v2';
+
+/* ================= storage ================= */
+function load(key, fallback){
+  try{ const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch(e){ return fallback; }
+}
+function save(key, val){
+  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+}
+
+/* ================= helpers ================= */
+const $ = s => document.querySelector(s);
+const clone = o => JSON.parse(JSON.stringify(o));
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function num(v){
+  const n = parseFloat(String(v==null?'':v).replace(/,/g,''));
+  return isFinite(n) ? n : 0;
+}
+// 表示用の数字: 1,000以上はK、1,000,000以上はM(1000=1K、2500=2.5K)。入力欄の値や計算には使わない
+// ブラインド・ANTE・人数など、スタックとベット以外の数字: 1,000以上はコンマ区切り
+function fmtC(n){
+  return (Math.round(n*100)/100).toLocaleString('en-US');
+}
+function fmt(n){
+  const a = Math.abs(n);
+  const trim = x => String(Math.round(x*100)/100);
+  if(a>=1000000) return trim(n/1000000)+'M';
+  if(a>=1000) return trim(n/1000)+'K';
+  return trim(n);
+}
+function cardHTML(code, size){
+  const cls = ['card', size||'', (code[1]==='h'||code[1]==='d')?'r':''].join(' ');
+  return '<span class="'+cls+'">'+code[0]+'<i>'+SUITS[code[1]]+'</i></span>';
+}
+function cardText(code){ return code[0]+SUITS[code[1]]; }
+function fmtDate(ts){
+  const d = new Date(ts);
+  return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+}
+function toast(msg){
+  const el = document.createElement('div');
+  el.className = 'toast'; el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2200);
+}
+function posLabel(p, h){ return p===h.heroPos ? p+'(Hero)' : p; }
+function modeName(h){
+  return h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT')+(h.sat?' (SATELLITE)':'');
+}
+// 相手のスタックは基本的に入力しない。入力がない相手は上限なし(不明)として扱い、画面にも出さない
+const STACK_UNKNOWN = 1e12;
+function stackKnown(h, p){
+  const raw = h.stacks[p];
+  return (raw!=null && raw!=='') || p===h.heroPos;
+}
+function stackOf(h, p){
+  const raw = h.stacks[p];
+  if(raw!=null && raw!=='') return num(raw);
+  return p===h.heroPos ? num(h.stack) : STACK_UNKNOWN;
+}
+
+/* ================= state ================= */
+function newDraft(){
+  return {
+    id:null, createdAt:null, step:'setup',
+    mode:'MTT', bbManual:false, anteManual:false, tname:'', sat:false, satCond:'', remain:'', entries:'', avg:'', shown:{},
+    sb:'', bb:'', ante:'', anteOn:false,
+    n:9, stack:'', stacks:{}, seatMode:'hero',
+    heroPos:'', cards:{},
+    actions:{pre:[],flop:[],turn:[],river:[]},
+    amt:'', raising:false,
+    result:'', tags:[], memo:''
+  };
+}
+let hands = load(KEY_HANDS, []);
+let draft = Object.assign(newDraft(), load(KEY_DRAFT, {}));
+if(draft.step==='seat') draft.step = 'setup';
+let tab = 'rec';
+let q = '';
+let tagFilter = [];
+function saveDraft(){ save(KEY_DRAFT, draft); }
+
+/* ================= betting engine ================= */
+function streetOrder(h, street){
+  const L = POS[h.n] || POS[9];
+  if(street==='pre') return L.slice();
+  if(h.n===2) return ['BB','SB'];
+  const i = L.indexOf('SB');
+  return L.slice(i).concat(L.slice(0,i));
+}
+// メインポット/サイドポットの内訳(フォールドした人の分はデッドマネーとして最上位に加える)
+function potLayers(P){
+  const names = Object.keys(P);
+  const live = names.filter(n => !P[n].folded && P[n].total>0);
+  // 区切りになるのは、All-inした人の合計額と、全員の最大額だけ
+  const top0 = Math.max.apply(null, [0].concat(live.map(n => P[n].total)));
+  const levels = Array.from(new Set(live.filter(n => P[n].allin).map(n => P[n].total).concat(top0))).filter(l => l>0).sort((a,b) => a-b);
+  const layers = [];
+  let prev = 0;
+  levels.forEach(l => {
+    let amt = 0;
+    names.forEach(n => { amt += Math.max(0, Math.min(P[n].total,l) - Math.min(P[n].total,prev)); });
+    layers.push(amt); prev = l;
+  });
+  const top = levels.length ? levels[levels.length-1] : 0;
+  let extra = 0;
+  names.forEach(n => { extra += Math.max(0, P[n].total - top); });
+  if(layers.length) layers[layers.length-1] += extra;
+  return layers;
+}
+// 現在のアクション列から、各ストリート終了時点の状態(スタック・ベット・pot・次の手番)を再計算する
+function simulate(h){
+  const L = POS[h.n] || POS[9];
+  const P = {};
+  L.forEach(p => { P[p] = {stack:stackOf(h,p), known:stackKnown(h,p), bet:0, total:0, folded:false, allin:false}; });
+  const init = clone(P);
+  let pot = 0;
+  const out = {S:{}, log:{}, frames:[], over:false, winner:null, init:init};
+
+  const ante = (h.mode==='MTT' || h.anteOn) ? num(h.ante) : 0;
+  if(ante>0) L.forEach(p => {
+    const x = Math.min(ante, P[p].stack);
+    P[p].stack -= x; P[p].total += x; pot += x;
+    if(P[p].stack<=0) P[p].allin = true;
+  });
+  const pay = (p, amt) => {
+    const x = Math.max(0, Math.min(amt, P[p].stack));
+    P[p].stack -= x; P[p].bet += x; P[p].total += x; pot += x;
+    if(P[p].stack<=0) P[p].allin = true;
+    return x;
+  };
+  pay('SB', num(h.sb));
+  pay('BB', num(h.bb));
+
+  STREETS.forEach(s => {
+    out.log[s] = [];
+    if(out.over){
+      out.S[s] = {P:clone(P), pot:pot, potStart:pot, current:0, queue:[], actor:null, closed:true, over:true};
+      return;
+    }
+    if(s!=='pre') L.forEach(p => { P[p].bet = 0; });
+    out.frames.push({k: s==='pre' ? 'start' : 'street', s:s, n:0, P:clone(P), pot:pot, boardN:BOARD_LEN[s]});
+    let current = Math.max.apply(null, L.map(p => P[p].bet));
+    const potStart = pot;
+    let queue = streetOrder(h, s).filter(p => !P[p].folded && !P[p].allin);
+    // 動ける人が1人以下で、誰にも合わせる必要がなければアクション不要
+    if(queue.length===0 || (queue.length===1 && P[queue[0]].bet>=current)) queue = [];
+
+    (h.actions[s]||[]).forEach(a => {
+      if(!queue.length) return;
+      const p = queue.shift();
+      const me = P[p];
+      const toCall = Math.max(0, current - me.bet);
+      let text = '', kind = a.act, total = 0;
+      if(a.act==='fold'){
+        me.folded = true; text = 'fold';
+      }else if(a.act==='check'){
+        text = 'check';
+      }else if(a.act==='call'){
+        const x = pay(p, toCall);
+        // スタックが足りない(またはちょうど全部の)コールはAll-in表記。サイドポットは potLayers が出す
+        if(me.allin){ kind = 'allin'; total = me.bet; text = 'all-in '+fmt(me.bet); }
+        else text = 'call '+fmt(x);
+      }else{
+        const maxTo = me.bet + me.stack;
+        // All-inは、金額が入力されていればその額(スタック不明の相手用)、なければスタック全部
+        const to = a.act==='allin' ? (num(a.amt)>0 ? Math.min(num(a.amt), maxTo) : maxTo) : Math.min(num(a.amt), maxTo);
+        const wasBet = current===0;
+        pay(p, to - me.bet);
+        if(a.act==='allin'){ me.stack = 0; me.allin = true; }
+        text = (me.allin ? 'all-in ' : (wasBet ? 'bet ' : 'raise to '))+fmt(me.bet);
+        kind = me.allin ? 'allin' : (wasBet ? 'bet' : 'raise'); total = me.bet;
+        if(me.bet > current){
+          // レイズ(現在額を上回るAll-inを含む)で、他の全員にもう一度手番が回る。
+          // 現在額に届かないショートAll-inは手番を再開させない
+          current = me.bet;
+          const ord = streetOrder(h, s);
+          const i = ord.indexOf(p);
+          queue = ord.slice(i+1).concat(ord.slice(0,i)).filter(x => x!==p && !P[x].folded && !P[x].allin);
+        }
+      }
+      out.log[s].push({pos:p, text:text, kind:kind, to:total});
+      out.frames.push({k:'act', s:s, n:out.log[s].length, pos:p, kind:kind, to:total, P:clone(P), pot:pot, boardN:BOARD_LEN[s]});
+      const alive = L.filter(x => !P[x].folded);
+      if(alive.length===1){ out.over = true; out.winner = alive[0]; queue = []; }
+    });
+
+    const closed = queue.length===0;
+    if(closed && !out.over){
+      // 誰にもコールされなかった分は戻す
+      const bets = L.map(p => [p, P[p].bet]).sort((a,b) => b[1]-a[1]);
+      const diff = bets[0][1] - (bets[1] ? bets[1][1] : 0);
+      if(diff>0 && !P[bets[0][0]].folded){
+        const t = P[bets[0][0]];
+        t.bet -= diff; t.total -= diff; t.stack += diff; pot -= diff;
+        if(t.stack>0) t.allin = false;
+      }
+    }
+    out.S[s] = {P:clone(P), pot:pot, potStart:potStart, current:current, queue:queue.slice(), actor:queue[0]||null, closed:closed, over:out.over};
+  });
+  return out;
+}
+function potLine(sn, label){
+  const layers = potLayers(sn.P);
+  let s = '<div class="pot">'+(label ? label+' ・ ' : '')+'Pot '+fmt(sn.pot);
+  if(layers.length>1) s += '<small>メイン '+fmt(layers[0])+'</small><small>サイド '+layers.slice(1).map(fmt).join(' / ')+'</small>';
+  return s+'</div>';
+}
+
+/* ================= text ================= */
+// アクションの表記(全ストリート共通): x / c / bet / r / f / AI。金額はBB単位
+function actToken(kind, to, bb){
+  const b = x => (bb>0 ? Math.round(x/bb*10)/10 : x)+'bb';
+  switch(kind){
+    case 'fold': return 'f';
+    case 'check': return 'x';
+    case 'call': return 'c';
+    case 'bet': return 'bet '+b(to);
+    case 'raise': return 'r '+b(to);
+    default: return 'AI '+b(to);
+  }
+}
+// 文字保存の形式(ユーザー指定の例に合わせる): 金額はBB単位、ポジションは小文字、
+// 同じ人の動きは「/」でつなぐ。ポジションは必ず書く
+function toText(h){
+  const sim = simulate(h);
+  const bb = num(h.bb);
+  const bbf = x => (bb>0 ? Math.round(x/bb*10)/10 : x)+'bb';
+  const lines = [];
+  lines.push(h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT'));
+  const ante = (h.mode==='MTT'||h.anteOn) && num(h.ante) ? '(ANTE '+fmtC(num(h.ante))+')' : '';
+  lines.push('Blind：'+fmtC(num(h.sb))+'/'+fmtC(bb)+ante);
+  const myStack = num(h.stack) > 0 ? fmt(num(h.stack)) : '';
+  const avg = h.mode==='MTT' && num(h.avg) > 0 ? 'Avg.'+fmt(num(h.avg)) : '';
+  if(myStack || avg) lines.push('Stack：'+(myStack || '?')+(avg ? '('+avg+')' : ''));
+  if(h.mode==='MTT'){
+    if(num(h.remain) || num(h.entries)) lines.push('Field：'+(h.remain ? fmtC(num(h.remain)) : '?')+'/'+(h.entries ? fmtC(num(h.entries)) : '?'));
+    if(h.sat) lines.push('サテライト'+(h.satCond ? ' 通過条件: '+h.satCond : ''));
+  }
+
+  const heroCards = ['h0','h1'].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
+  const tokenOf = e => actToken(e.kind, e.to, bb);
+  const reached = STREETS.filter(s => sim.log[s].length || (BOARD_KEYS[s] && BOARD_KEYS[s].some(k => h.cards[k])) || s==='pre');
+  const lastStreet = reached[reached.length-1];
+  const order = POS[h.n] || POS[9];
+  const blocks = [];
+  reached.forEach(s => {
+    const log = sim.log[s];
+    const out = [];
+    if(s==='pre') out.push('【 Preflop 】');
+    else{
+      const bk = BOARD_KEYS[s].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
+      out.push('【 '+STREET_NAME[s]+' 】');
+      out.push(bk+' ('+bbf(sim.S[s].potStart)+')');
+    }
+    const groups = [];
+    log.forEach(e => {
+      let g = groups.filter(x => x.pos===e.pos)[0];
+      if(!g){ g = {pos:e.pos, toks:[]}; groups.push(g); }
+      g.toks.push(tokenOf(e));
+    });
+    if(s==='pre' && h.heroPos && !groups.some(g => g.pos===h.heroPos)) groups.push({pos:h.heroPos, toks:[]});
+    groups.forEach(g => {
+      const isHero = g.pos===h.heroPos;
+      if(s==='pre' && !isHero && g.toks.every(t => t==='f')) return; // プリフロップのフォールドは書かない
+      const head = g.pos.toLowerCase()+(s==='pre' && isHero && heroCards ? ' ('+heroCards+')' : '');
+      out.push(head+(g.toks.length ? ' '+g.toks.join(' / ') : ''));
+    });
+    if(s===lastStreet){
+      order.forEach(p => {
+        const vc = [h.cards['v_'+p+'_0'], h.cards['v_'+p+'_1']].filter(Boolean).join('');
+        const shown = vc || (h.shown && h.shown[p] ? String(h.shown[p]).trim() : ''); // 古い記録の文字入力も残す
+        if(shown) out.push(p.toLowerCase()+' '+shown);
+      });
+    }
+    blocks.push(out.join('\n'));
+  });
+  return lines.join('\n')+'\n'+blocks.join('\n\n')+(h.memo.trim() ? '\n\n【 メモ欄 】\n'+h.memo.trim() : '');
+}
+
+/* ================= table view ================= */
+// 座席は角丸の長方形の周りに等間隔で並べる(人数が減っても等間隔)。BTNは左下に固定し、時計回りにSB, BB, …
+// 長方形の位置は、幅を1とした比率(上下は高さに対する比率)。aspect は 高さ/幅
+const SEAT_RECT = {l:0.09, r:0.91, top:0.13, bot:0.87, rad:0.17};
+const APP_ASPECT = 0.85;
+function seatXY(pos, n, aspect){
+  aspect = aspect || APP_ASPECT;
+  const list = POS[n] || POS[9], k = list.length;
+  let i0 = list.indexOf('BTN'); if(i0<0) i0 = 0; // 2人のときはSB(=BTN)を左下に
+  const idx = (list.indexOf(pos) - i0 + k) % k;
+  const L = SEAT_RECT.l, R = SEAT_RECT.r, T = SEAT_RECT.top*aspect, B = SEAT_RECT.bot*aspect, r = SEAT_RECT.rad;
+  const wS = (R-L) - 2*r, hS = (B-T) - 2*r, arc = Math.PI*r/2;
+  const P = 2*wS + 2*hS + 4*arc;
+  let t = (R - r - 0.38) + idx*P/k; // BTNは下辺の x=38% の位置から
+  t = ((t % P) + P) % P;
+  // 下辺(左へ) → 左下の角 → 左辺(上へ) → 左上の角 → 上辺(右へ) → 右上の角 → 右辺(下へ) → 右下の角
+  const segs = [wS, arc, hS, arc, wS, arc, hS, arc];
+  let x = 0, y = 0;
+  for(let g=0; g<8; g++){
+    if(t <= segs[g] || g===7){
+      const u = Math.min(t, segs[g]);
+      switch(g){
+        case 0: x = R-r-u; y = B; break;
+        case 1: { const a = Math.PI/2 + u/r; x = L+r + r*Math.cos(a); y = B-r + r*Math.sin(a); break; }
+        case 2: x = L; y = B-r-u; break;
+        case 3: { const a = Math.PI + u/r; x = L+r + r*Math.cos(a); y = T+r + r*Math.sin(a); break; }
+        case 4: x = L+r+u; y = T; break;
+        case 5: { const a = 1.5*Math.PI + u/r; x = R-r + r*Math.cos(a); y = T+r + r*Math.sin(a); break; }
+        case 6: x = R; y = T+r+u; break;
+        default: { const a = u/r; x = R-r + r*Math.cos(a); y = B-r + r*Math.sin(a); }
+      }
+      break;
+    }
+    t -= segs[g];
+  }
+  return [x*100, y/aspect*100];
+}
+function slotHTML(key, size){
+  const code = draft.cards[key];
+  const inner = code ? cardHTML(code, size) : '<span class="slot '+(size||'')+'">+</span>';
+  return '<button data-a="slot" data-k="'+key+'" aria-label="カード選択">'+inner+'</button>';
+}
+// opts: {actor, selectable, mid(html)}。席のタップは、設定では自分の席の選択、それ以外ではスタックの入力
+function actLabel(kind){
+  return {fold:'fold', check:'check', call:'call', bet:'bet', raise:'raise', allin:'all-in'}[kind] || kind;
+}
+function tableHTML(P, opts){
+  const d = draft, list = POS[d.n] || POS[9];
+  const dealer = list.indexOf('BTN')>=0 ? 'BTN' : 'SB';
+  let seats = '', chips = '';
+  list.forEach(p => {
+    const xy = seatXY(p, d.n);
+    const pl = P[p];
+    let cs = '';
+    if(!pl.folded){
+      if(p===d.heroPos && (d.cards.h0||d.cards.h1)){
+        cs = ['h0','h1'].map(k => d.cards[k] ? cardHTML(d.cards[k],'tiny') : '<span class="cback"></span>').join('');
+      }else if(opts.reveal && (d.cards['v_'+p+'_0'] || d.cards['v_'+p+'_1'])){
+        cs = ['v_'+p+'_0','v_'+p+'_1'].map(k => d.cards[k] ? cardHTML(d.cards[k],'tiny') : '<span class="cback"></span>').join('');
+      }else{
+        cs = '<span class="cback"></span><span class="cback"></span>';
+      }
+    }
+    const cls = ['plate', p===d.heroPos?'hero':'', pl.folded?'fold':'', opts.actor===p?'act':'', (opts.selectable&&p===d.heroPos)?'sel':''].join(' ');
+    seats += '<button class="'+cls+'" data-a="seat" data-p="'+p+'" style="left:'+xy[0]+'%;top:'+xy[1]+'%">'+
+      '<span class="cs">'+cs+'</span><span class="lab">'+esc(p)+'</span>'+
+      (pl.allin && !pl.folded ? '<span class="tag-allin">ALL-IN</span>' : '<span class="stk">'+(pl.known ? fmt(pl.stack) : '&nbsp;')+'</span>')+
+      (opts.last && opts.last.pos===p ? '<span class="lastact">'+actLabel(opts.last.kind)+'</span>' : '')+
+    '</button>';
+    if(pl.bet>0 && !pl.folded){
+      const f = (xy[1]<20 || xy[1]>80) ? 0.5 : 0.4; // 席からテーブル中央へ寄せた位置にチップを置く
+      chips += '<span class="bet" style="left:'+(xy[0]+(50-xy[0])*f)+'%;top:'+(xy[1]+(49-xy[1])*f)+'%">'+fmt(pl.bet)+'</span>';
+    }
+  });
+  const dxy = seatXY(dealer, d.n);
+  const dbtn = '<span class="dealer" style="left:'+(dxy[0]-10)+'%;top:'+(dxy[1]-13)+'%">D</span>';
+  return '<div class="table"><div class="felt"></div><div class="mid">'+(opts.mid||'')+'</div>'+chips+dbtn+seats+'</div>';
+}
+function boardRow(street){
+  const keys = ['b0','b1','b2','b3','b4'].slice(0, BOARD_LEN[street]);
+  return keys.length ? '<div class="board">'+keys.map(k => slotHTML(k,'sm')).join('')+'</div>' : '';
+}
+
+/* ================= views ================= */
+function renderTabs(){
+  $('#tabs').innerHTML =
+    '<button data-a="tab" data-v="rec" class="'+(tab==='rec'?'on':'')+'">記録</button>'+
+    '<button data-a="tab" data-v="list" class="'+(tab==='list'?'on':'')+'">一覧 ('+hands.length+')</button>';
+}
+function setupReady(){ return num(draft.bb)>0 && num(draft.stack)>0; }
+function handReady(){ return !!(draft.heroPos && draft.cards.h0 && draft.cards.h1); }
+
+// 下のパネルの切り替え(設定 / 各ストリート / 保存)。前が終わっていない先の項目は押せない
+function phaseTabs(sim){
+  const d = draft;
+  const ready = setupReady() && handReady();
+  const ok = {setup:true};
+  let open = ready;
+  STREETS.forEach(s => {
+    ok[s] = open;
+    const bk = BOARD_KEYS[s];
+    open = open && sim.S[s].closed && !sim.S[s].over && (!bk || bk.every(k => d.cards[k]));
+  });
+  ok.sum = open || (ready && sim.over);
+  return '<div class="phases">'+STEPS.map(s =>
+    '<button data-a="phase" data-v="'+s[0]+'" class="'+(d.step===s[0]?'on':'')+'"'+(ok[s[0]]?'':' disabled')+'>'+s[1]+'</button>'
+  ).join('')+'</div>';
+}
+
+function setupView(){
+  const d = draft, mtt = d.mode==='MTT';
+  const anteShown = mtt || d.anteOn;
+  const hasActs = STREETS.some(s => d.actions[s].length);
+  const ready = setupReady() && handReady();
+  const nChips = [2,3,4,5,6,7,8,9].map(n => '<button class="chip'+(d.n===n?' on':'')+'" data-a="n" data-v="'+n+'">'+n+'</button>').join('');
+  const missing = [];
+  if(!setupReady()) missing.push('BBと自分のスタック');
+  if(!d.heroPos) missing.push('自分の席');
+  if(!(d.cards.h0 && d.cards.h1)) missing.push('手札2枚');
+  return '<section>'+
+    '<div class="seg">'+[['MTT','TOURNAMENT'],['RING','RING GAME']].map(m => '<button data-a="mode" data-v="'+m[0]+'" class="'+(d.mode===m[0]?'on':'')+'">'+m[1]+'</button>').join('')+'</div>'+
+  '</section>'+
+  '<section><h2>ブラインド</h2><div class="grid '+(anteShown?'g3':'g2')+'">'+
+    '<div><label class="f" for="f-sb">SB</label><input id="f-sb" data-f="sb" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.sb)+'"></div>'+
+    '<div><label class="f" for="f-bb">BB</label><input id="f-bb" data-f="bb" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.bb)+'"></div>'+
+    (anteShown ? '<div><label class="f" for="f-ante">ANTE</label><input id="f-ante" data-f="ante" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.ante)+'"></div>' : '')+
+  '</div>'+
+  (mtt ? '' : '<div class="row" style="margin-top:10px"><button class="chip'+(d.anteOn?' on':'')+'" data-a="anteon">ANTEあり</button></div>')+
+  '</section>'+
+  (mtt ?
+    '<section><h2>トーナメント情報</h2>'+
+      '<div style="margin-bottom:10px"><label class="f" for="f-tname">トーナメント名</label><input id="f-tname" data-f="tname" type="text" value="'+esc(d.tname)+'"></div>'+
+      '<div class="seg">'+[[false,'NORMAL'],[true,'SATELLITE']].map(m => '<button data-a="sat" data-v="'+m[0]+'" class="'+(d.sat===m[0]?'on':'')+'">'+m[1]+'</button>').join('')+'</div>'+
+      '<div class="grid g2" style="margin-top:10px">'+
+        '<div><label class="f" for="f-remain">残り人数</label><input id="f-remain" data-f="remain" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.remain)+'"></div>'+
+        '<div><label class="f" for="f-entries">エントリー数</label><input id="f-entries" data-f="entries" type="text" inputmode="numeric" pattern="[0-9]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.entries)+'"></div>'+
+      '</div>'+
+      '<div style="margin-top:10px"><label class="f" for="f-avg">Avg.</label><input id="f-avg" data-f="avg" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.avg)+'"></div>'+
+    '</section>' : '')+
+  '<section><h2>テーブルの人数</h2><div class="grid g4">'+nChips+'</div></section>'+
+  '<section><h2>自分のスタック</h2><input id="f-stack" data-f="stack" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" placeholder="自分のスタックだけ入力" value="'+esc(d.stack)+'">'+
+    '<p class="hint">相手のスタックは基本的に入力しません。相手がオールインしたときは、その金額を入力します。分かるときだけ、アクション入力中に席をタップして入力できます(任意)。</p>'+
+    (hasActs ? '<p class="hint">ブラインド・人数・自分のスタックを変えると、入力済みのアクションは消えます。</p>' : '')+
+  '</section>'+
+  '<section><h2>自分の席と手札</h2><p class="hint" style="margin-top:0">上のテーブルで自分の席をタップし、手札を2枚選びます。</p>'+
+    '<div class="hero-cards"><span class="lab">'+esc(d.heroPos||'席未選択')+'</span>'+slotHTML('h0','big')+slotHTML('h1','big')+'</div></section>'+
+  '<div class="btns"><button class="btn main" data-a="next"'+(ready?'':' disabled')+'>Preflopへ</button></div>'+
+  '<p class="hint" id="setup-hint"'+(ready?' hidden':'')+'>'+(missing.length ? esc(missing.join('・'))+'を入れると進めます。' : '')+'</p>';
+}
+
+function composer(s, sn){
+  const d = draft;
+  const p = sn.actor, me = sn.P[p];
+  const toCall = Math.max(0, sn.current - me.bet);
+  const maxTo = me.bet + me.stack;
+  const canCheck = toCall===0;
+  const callAllIn = toCall>=me.stack && !canCheck;
+  let html = '<p class="turn"><b>'+esc(p)+'</b>'+(p===d.heroPos?'(Hero)':'')+' のアクション'+(me.known ? ' ・ スタック '+fmt(me.stack) : '')+'</p>';
+  if(d.raising==='allin'){
+    html += '<div style="margin-top:12px"><label class="f" for="amt">オールインの額(この人が出した合計)</label>'+
+      '<input id="amt" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.amt)+'"></div>'+
+      '<div class="navrow"><button class="btn" data-a="cancelraise">やめる</button><button class="btn main" data-a="commit">決定</button></div>';
+    return html;
+  }
+  if(d.raising){
+    const isBet = sn.current===0;
+    let sizes;
+    if(s==='pre'){
+      sizes = [2,2.5,3,4].map(m => [m+'x', Math.round(sn.current*m)]);
+    }else if(isBet){
+      sizes = [['33%',.33],['50%',.5],['75%',.75],['pot',1]].map(m => [m[0], Math.round(sn.pot*m[1])]);
+    }else{
+      sizes = [['50%',.5],['75%',.75],['pot',1]].map(m => [m[0], Math.round(sn.current + m[1]*(sn.pot+toCall))]);
+      sizes.push(['2.5x', Math.round(sn.current*2.5)]);
+    }
+    html += '<div style="margin-top:6px"><label class="f" for="amt">'+(isBet?'ベット額':'レイズ後の合計額')+(me.known ? '(最大 '+fmt(maxTo)+')' : '')+'</label>'+
+      '<input id="amt" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.amt)+'"></div>'+
+      '<div class="sizes">'+sizes.map(z => '<button class="chip" data-a="size" data-v="'+z[1]+'">'+z[0]+'</button>').join('')+'</div>'+
+      '<div class="navrow"><button class="btn" data-a="cancelraise">やめる</button><button class="btn main" data-a="commit">決定</button></div>';
+    return html;
+  }
+  html += '<div class="acts">';
+  if(!canCheck) html += '<button data-a="act" data-v="fold">fold</button>';
+  html += canCheck ? '<button data-a="act" data-v="check">check</button>'
+                   : '<button data-a="act" data-v="call">call '+fmt(Math.min(toCall,me.stack))+(callAllIn?' (all-in)':'')+'</button>';
+  if(!callAllIn && me.stack>0){
+    html += '<button data-a="startraise">'+(sn.current===0?'bet':'raise')+'</button>';
+    html += '<button data-a="act" data-v="allin">all-in'+(me.known ? ' '+fmt(maxTo) : '')+'</button>';
+  }
+  html += '</div>';
+  return html;
+}
+
+// ストリート(Preflop〜River)のパネル。テーブルは上に常時表示されている
+function streetPanel(s, sim){
+  const d = draft, sn = sim.S[s];
+  const bk = BOARD_KEYS[s];
+  const boardReady = !bk || bk.every(k => d.cards[k]);
+  const log = sim.log[s];
+  let body = '';
+
+  if(!boardReady){
+    body += '<div class="notice">'+STREET_NAME[s]+'のボードを選んでください。</div>'+
+      '<div class="btns" style="margin-top:12px"><button class="btn main" data-a="slot" data-k="'+bk.filter(k=>!d.cards[k])[0]+'">カードを選ぶ</button></div>';
+  }else if(sn.closed){
+    if(sim.over){
+      body += '<div class="notice"><b>'+esc(sim.winner)+'</b> 以外が全員フォールド。pot '+fmt(sn.pot)+' を獲得。</div>';
+    }else if(!log.length){
+      body += '<div class="notice">全員がAll-inのため、このストリートのアクションはありません。</div>';
+    }else{
+      body += '<div class="notice">'+STREET_NAME[s]+'のアクションが終わりました。</div>';
+    }
+  }else{
+    body += composer(s, sn);
+  }
+  const last = s==='river' || sim.over;
+  const canNext = boardReady && sn.closed;
+  const nextName = last ? '保存へ' : {pre:'Flopへ',flop:'Turnへ',turn:'Riverへ'}[s];
+  if(!d.raising){
+    const bb = num(d.bb);
+    if(log.length) body += '<p class="logline">'+esc(log.map(e => e.pos.toLowerCase()+' '+actToken(e.kind, e.to, bb)).join(' ・ '))+'</p>';
+    body += '<div class="navrow">'+(log.length ? '<button class="chip" data-a="undo">1つ戻す</button>' : '')+
+      '<button class="btn main" data-a="next"'+(canNext?'':' disabled')+'>'+nextName+'</button></div>';
+  }
+  return body;
+}
+
+function summaryView(){
+  const d = draft;
+  const tagSet = PRESET_TAGS.concat(d.tags.filter(t => PRESET_TAGS.indexOf(t)<0));
+  const sim = simulate(d);
+  const lastSn = sim.S[STREETS.filter(s => sim.log[s].length || s==='pre').pop()];
+  const rivals = sim.over ? [] : (POS[d.n]||POS[9]).filter(p => p!==d.heroPos && !lastSn.P[p].folded);
+  return '<section><h2>記録内容</h2><div class="text" id="preview">'+esc(toText(d))+'</div></section>'+
+    (rivals.length ? '<section><h2>相手のハンド(見えたら)</h2><div class="grid g2">'+
+      rivals.map(p => '<div class="rival"><span class="lab">'+esc(p)+'</span>'+slotHTML('v_'+p+'_0')+slotHTML('v_'+p+'_1')+'</div>').join('')+
+    '</div></section>' : '')+
+    '<section><h2>結果</h2><div class="row">'+
+      RESULTS.map(r => '<button class="chip'+(d.result===r[0]?' on':'')+'" data-a="result" data-v="'+r[0]+'">'+r[1]+'</button>').join('')+
+    '</div></section>'+
+    (d.mode==='MTT' && d.sat ? '<section><h2>通過条件</h2><input id="satcond" type="text" placeholder="例: 上位3名通過" value="'+esc(d.satCond)+'"></section>' : '')+
+    '<section><h2>タグ</h2><div class="row">'+
+      tagSet.map(t => '<button class="chip'+(d.tags.indexOf(t)>=0?' on':'')+'" data-a="tag" data-t="'+esc(t)+'">'+esc(t)+'</button>').join('')+
+    '</div>'+
+    '<div class="row" style="margin-top:10px;flex-wrap:nowrap"><input id="newtag" type="text" placeholder="タグを追加" style="flex:1"><button class="chip" data-a="addtag">追加</button></div></section>'+
+    '<section><h2>ひとことメモ</h2><textarea id="memo" placeholder="どこで迷った？ 相手のクセは？">'+esc(d.memo)+'</textarea></section>'+
+    '<div class="btns"><button class="btn" data-a="prev">戻る</button><button class="btn main" data-a="save">'+(d.id?'更新して保存':'保存')+'</button></div>'+
+    '<div class="btns" style="margin-top:28px"><button class="btn quiet danger" data-a="askreset">最初からやり直す</button></div>';
+}
+
+// 1画面: 上にテーブル(常時表示)、下に操作パネル
+function renderRecord(){
+  const d = draft, sim = simulate(d);
+  const ph = d.step;
+  let snap, mid, body, actor = null, last = null;
+  if(ph==='setup'){
+    snap = sim.init;
+    mid = d.heroPos ? '' : '<div class="pot" style="color:var(--soft);font-weight:400">自分の席をタップ</div>';
+    body = setupView();
+  }else if(ph==='sum'){
+    const lf = sim.frames[sim.frames.length-1];
+    snap = lf.P;
+    mid = potLine({P:lf.P, pot:lf.pot}) + boardRow('river');
+    body = summaryView();
+  }else{
+    const sn = sim.S[ph], bk = BOARD_KEYS[ph];
+    snap = sn.P;
+    actor = (!bk || bk.every(k => d.cards[k])) && !sn.closed ? sn.actor : null;
+    mid = potLine(sn, STREET_NAME[ph]) + boardRow(ph);
+    const lg = sim.log[ph]; last = lg.length ? lg[lg.length-1] : null;
+    body = streetPanel(ph, sim);
+  }
+  $('#view').innerHTML =
+    tableHTML(snap, {actor:actor, last:last, reveal:ph==='sum', selectable:ph==='setup', mid:mid})+
+    '<div class="panel">'+phaseTabs(sim)+body+'</div>';
+}
+
+/* ---- list ---- */
+function filteredHands(){
+  const needle = q.trim().toLowerCase();
+  return hands.filter(h => {
+    if(tagFilter.some(t => h.tags.indexOf(t)<0)) return false;
+    if(!needle) return true;
+    const hay = [h.memo, h.heroPos, h.tags.join(' '), modeName(h), (h.cards.h0||'')+(h.cards.h1||'')].join(' ').toLowerCase();
+    return hay.indexOf(needle)>=0;
+  });
+}
+function handCard(h){
+  const cards = ['h0','h1'].filter(k=>h.cards[k]).map(k=>cardHTML(h.cards[k])).join('');
+  const board = ['b0','b1','b2','b3','b4'].filter(k=>h.cards[k]).map(k=>cardHTML(h.cards[k],'mini')).join('');
+  const res = RESULTS.filter(r=>r[0]===h.result && r[0])[0];
+  return '<button class="hand" data-a="open" data-id="'+h.id+'">'+
+    '<div class="top">'+cards+'<span class="pos">'+esc(h.heroPos||'—')+'</span>'+
+      (res?'<span class="res-'+res[0]+'">'+res[1]+'</span>':'')+
+      '<span class="when">'+fmtDate(h.createdAt)+'</span></div>'+
+    '<div class="sub">'+esc(modeName(h))+' ・ '+fmtC(num(h.sb))+'/'+fmtC(num(h.bb))+' ・ '+h.n+'人</div>'+
+    (board?'<div class="bd">'+board+'</div>':'')+
+    (h.memo?'<p class="memo">'+esc(h.memo)+'</p>':'')+
+    (h.tags.length?'<div class="tags">'+h.tags.map(t=>'<span class="tag">'+esc(t)+'</span>').join('')+'</div>':'')+
+  '</button>';
+}
+function renderList(){
+  const all = {};
+  hands.forEach(h => h.tags.forEach(t => all[t]=true));
+  const tags = Object.keys(all);
+  const shown = filteredHands();
+  $('#view').innerHTML =
+    '<section style="margin-top:8px"><input id="q" type="search" placeholder="メモ・タグ・ハンドで検索" value="'+esc(q)+'">'+
+    (tags.length?'<div class="row" style="margin-top:10px">'+tags.map(t=>'<button class="chip'+(tagFilter.indexOf(t)>=0?' on':'')+'" data-a="ftag" data-t="'+esc(t)+'">'+esc(t)+'</button>').join('')+'</div>':'')+
+    '<div class="count">'+shown.length+'件</div></section>'+
+    '<div id="results">'+(shown.length ? shown.map(handCard).join('') : '<p class="empty">'+(hands.length?'条件に合うハンドがありません':'まだ記録がありません。「記録」タブから最初の1ハンドを残しましょう。')+'</p>')+'</div>';
+}
+function render(){
+  renderTabs();
+  if(tab==='rec') renderRecord(); else renderList();
+}
+
+/* ================= sheets ================= */
+function closeLayer(){ videoJob.cancel = true; startToken = null; $('#layer').innerHTML = ''; }
+// 同じ枠のグループ(手札2枚、フロップ3枚、ターン、リバー、相手ごとの手札2枚)
+function groupOf(key){
+  if(key.indexOf('v_')===0){ const base = key.slice(0, -1); return [base+'0', base+'1']; }
+  return SLOT_GROUPS.filter(g => g.indexOf(key)>=0)[0];
+}
+function slotName(key){
+  const m = key.match(/^v_(.+)_([01])$/);
+  return m ? m[1]+' の手札 '+(+m[2]+1)+'枚目' : SLOT_NAMES[key];
+}
+// このグループで選んだカードは金色で、もう一度タップすると解除できる。別のストリート/手札で選んだカードは選べない
+function openPicker(key){
+  const grp = groupOf(key);
+  const others = {}, mine = {};
+  for(const k in draft.cards){
+    if(grp.indexOf(k)<0) others[draft.cards[k]] = true; else mine[draft.cards[k]] = k;
+  }
+  let grid = '';
+  ['s','h','d','c'].forEach(su => {
+    grid += '<div class="picker">';
+    for(const r of RANKS){
+      const code = r+su, sel = mine[code];
+      grid += '<button data-a="pick" data-c="'+code+'"'+(sel ? ' data-sel="'+esc(sel)+'"' : '')+' class="'+(su==='h'||su==='d'?'r':'')+(sel?' cur':'')+'"'+(others[code]?' disabled':'')+'>'+r+'<i>'+SUITS[su]+'</i></button>';
+    }
+    grid += '</div>';
+  });
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet" data-key="'+esc(key)+'">'+
+    '<h3>'+esc(slotName(key))+'のカード</h3>'+
+    '<p class="hint" style="margin:-6px 0 12px">金色のカードは選択済みです。もう一度タップすると解除して、選び直せます。</p>'+grid+
+    '<div class="btns" style="margin-top:0"><button class="btn" data-a="clearslot" data-k="'+esc(key)+'">この枠を空にする</button><button class="btn" data-a="close">閉じる</button></div>'+
+    '</div></div>';
+}
+function openStack(p){
+  const hero = p===draft.heroPos;
+  const explicit = draft.stacks[p]!=null && draft.stacks[p]!=='';
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet" data-p="'+esc(p)+'">'+
+    '<h3>'+esc(p)+' の開始スタック</h3>'+
+    '<input id="seatstack" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+(stackKnown(draft,p) ? esc(stackOf(draft,p)) : '')+'">'+
+    '<p class="hint">'+(hero ? 'このハンドの最初のスタックです。' : '分かるときだけ入力してください(任意)。入力しなければ、スタックは表示しません。')+'</p>'+
+    '<div class="btns"><button class="btn" data-a="close">やめる</button><button class="btn main" data-a="savestack">決定</button></div>'+
+    (!hero && explicit ? '<div class="btns" style="margin-top:10px"><button class="btn" data-a="resetstack">入力を消す</button></div>' : '')+
+    '</div></div>';
+  const el = $('#seatstack'); if(el){ el.focus(); el.select(); }
+}
+function openDetail(id){
+  const h = hands.filter(x=>x.id===id)[0];
+  if(!h) return;
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet">'+
+    '<h3>'+esc(modeName(h))+' ・ '+esc(h.heroPos||'—')+'</h3>'+
+    '<canvas id="rp" class="rp" width="'+VW+'" height="'+VH+'"></canvas>'+
+    '<div class="rpctl"><button class="chip" data-a="rp-prev">◀ 前</button><button class="chip" id="rp-play" data-a="rp-toggle">一時停止</button><button class="chip" data-a="rp-next">次 ▶</button></div>'+
+    '<input id="rp-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="再生位置">'+
+    '<div class="btns" style="margin-top:14px"><button class="btn main" data-a="share" data-id="'+h.id+'">共有</button>'+
+      '<button class="btn" data-a="edit" data-id="'+h.id+'">編集</button>'+
+      '<button class="btn danger slim" data-a="askdel" data-id="'+h.id+'">削除</button></div>'+
+    '<h2 style="margin-top:22px">記録内容</h2><div class="text">'+esc(toText(h))+'</div>'+
+    '</div></div>';
+  playReplay($('#rp'), h);
+  prepareVideo(h); // 共有に備えて、動画を裏で先に作っておく
+}
+// 共有ボタンを押したらすぐ共有シート(LINEなど)を開けるよう、動画は詳細を開いたときに裏で先に作っておく
+const videoCache = {};    // id -> {sig, blob, ext}
+const videoJobs = {};     // id -> Promise
+const videoProgress = {}; // id -> 進み具合を受け取る関数
+let startToken = null;
+function getHand(id){ return hands.filter(x => x.id===id)[0]; }
+function videoSig(h){ return JSON.stringify(h); }
+function cachedVideo(h){
+  const c = videoCache[h.id];
+  return c && c.sig===videoSig(h) ? c : null;
+}
+function prepareVideo(h){
+  const hit = cachedVideo(h);
+  if(hit) return Promise.resolve(hit);
+  if(videoJobs[h.id]) return videoJobs[h.id];
+  const sig = videoSig(h);
+  videoJobs[h.id] = makeVideo(h, r => { if(videoProgress[h.id]) videoProgress[h.id](r); }, {cancel:false})
+    .then(r => { videoCache[h.id] = {sig:sig, blob:r.blob, ext:r.ext}; return videoCache[h.id]; })
+    .catch(() => null)
+    .then(r => { delete videoJobs[h.id]; return r; });
+  return videoJobs[h.id];
+}
+function videoFile(entry, id){
+  return new File([entry.blob], 'spotmemo-'+id+'.'+entry.ext, {type:entry.blob.type});
+}
+// 共有シートを開く。ユーザーのタップの中で同期的に呼ぶこと(スマホの制限)
+function sendVideo(entry, id){
+  const file = videoFile(entry, id);
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({files:[file]}).catch(e => { if(!e || e.name!=='AbortError') toast('この環境では動画を共有できませんでした'); });
+  }else{
+    saveVideoFile(entry, id);
+  }
+}
+function openShare(id){
+  const h = getHand(id);
+  const ready = h && cachedVideo(h);
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet"><h3>共有のしかた</h3>'+
+    '<div class="btns" style="margin-top:0"><button class="btn main" id="btn-video" data-a="sharevideo" data-id="'+id+'">'+(ready ? '動画で共有' : '動画で共有(準備中)')+'</button></div>'+
+    '<div class="btns" style="margin-top:10px"><button class="btn" data-a="sharetext" data-id="'+id+'">テキストで共有</button></div>'+
+    '<div class="btns" style="margin-top:10px"><button class="btn" data-a="open" data-id="'+id+'">戻る</button></div>'+
+    '</div></div>';
+  if(h && !ready) prepareVideo(h).then(() => { const b = $('#btn-video'); if(b) b.textContent = '動画で共有'; });
+}
+// 準備がまだのとき(または共有シートが使えない環境)の、動画を作って確認する画面
+function startVideo(id){
+  const h = getHand(id);
+  if(!h) return;
+  const token = {}; startToken = token;
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet"><h3>動画を作っています</h3>'+
+    '<p>この画面を開いたままにしてください。</p>'+
+    '<div class="meter"><div id="vprog"></div></div>'+
+    '<div class="btns"><button class="btn" data-a="close">やめる</button></div></div></div>';
+  videoProgress[id] = ratio => { if(startToken!==token) return; const el = $('#vprog'); if(el) el.style.width = Math.round(ratio*100)+'%'; };
+  prepareVideo(h).then(entry => {
+    if(startToken!==token) return; // 閉じた、または別の画面に移った
+    if(!entry){
+      $('#layer').innerHTML =
+        '<div class="back" data-a="close"><div class="sheet"><h3>動画を作れませんでした</h3>'+
+        '<p>このブラウザは動画の書き出しに対応していない可能性があります。テキストで共有できます。</p>'+
+        '<div class="btns"><button class="btn" data-a="sharetext" data-id="'+id+'">テキストで共有</button><button class="btn" data-a="close">閉じる</button></div></div></div>';
+      return;
+    }
+    const url = URL.createObjectURL(entry.blob);
+    $('#layer').innerHTML =
+      '<div class="back" data-a="close"><div class="sheet"><h3>動画ができました</h3>'+
+      '<video class="rp" src="'+url+'" controls playsinline muted loop autoplay></video>'+
+      '<div class="btns"><button class="btn main" data-a="sendvideo" data-id="'+id+'">共有する</button></div>'+
+      '<div class="btns" style="margin-top:10px"><button class="btn" data-a="savevideo" data-id="'+id+'">端末に保存</button><button class="btn" data-a="close">閉じる</button></div>'+
+      '</div></div>';
+  });
+}
+function saveVideoFile(entry, id){
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(entry.blob);
+  a.download = 'spotmemo-'+id+'.'+entry.ext;
+  document.body.appendChild(a); a.click(); a.remove();
+  toast('保存しました');
+}
+function shareText(id){
+  const h = hands.filter(x => x.id===id)[0];
+  if(!h) return;
+  const text = toText(h);
+  const copy = () => {
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(() => toast('コピーしました'), () => toast('コピーできませんでした'));
+    }else{
+      toast('この端末では共有できません');
+    }
+  };
+  if(navigator.share){
+    // 共有シートが使えない環境ではコピーに切り替える(ユーザーが閉じただけのときは何もしない)
+    navigator.share({text:text}).catch(e => { if(!e || e.name!=='AbortError') copy(); });
+  }else{
+    copy();
+  }
+}
+function askReset(){
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet"><h3>最初からやり直しますか？</h3>'+
+    '<p>入力中の内容がすべて消えます。</p>'+
+    '<div class="btns"><button class="btn" data-a="close">やめる</button><button class="btn danger" data-a="reset">やり直す</button></div></div></div>';
+}
+function askDelete(id){
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet"><h3>このハンドを削除しますか？</h3>'+
+    '<p>削除すると元に戻せません。</p>'+
+    '<div class="btns"><button class="btn" data-a="close">やめる</button><button class="btn danger" data-a="del" data-id="'+id+'">削除する</button></div></div></div>';
+}
+
+/* ================= replay video ================= */
+const VW = 720, VH = 1280;
+const VC = {ink:'#141311', ink3:'#2a251d', gold:'#c9a15c', gold2:'#e4c483', soft:'#d6cfc1', muted:'#b8b0a2', paper:'#f7f4ec', red:'#b8382e', back:'#6b2d2a', felt:'#2d6a4a', wood:'#b8874f', rail:'#24221f', warn:'#dd8f84', act:'#4d3b20', fold:'#a39b8c'};
+const FONT_JP = '"Zen Kaku Gothic New",sans-serif';
+const FONT_EN = 'Cinzel,serif';
+
+function rr(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r, y); ctx.arcTo(x+w, y, x+w, y+h, r); ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r); ctx.arcTo(x, y, x+w, y, r); ctx.closePath();
+}
+function vText(ctx, str, x, y, font, color, align){
+  ctx.font = font; ctx.fillStyle = color; ctx.textAlign = align || 'left'; ctx.textBaseline = 'alphabetic';
+  ctx.fillText(str, x, y);
+}
+function vCard(ctx, code, x, y, w, h){
+  rr(ctx, x, y, w, h, 5); ctx.fillStyle = VC.paper; ctx.fill();
+  const red = code[1]==='h' || code[1]==='d';
+  ctx.fillStyle = red ? VC.red : VC.ink; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '700 '+Math.round(h*0.42)+'px '+FONT_JP; ctx.fillText(code[0], x+w/2, y+h*0.36);
+  ctx.font = '700 '+Math.round(h*0.34)+'px '+FONT_JP; ctx.fillText(SUITS[code[1]], x+w/2, y+h*0.74);
+}
+function vBack(ctx, x, y, w, h){ rr(ctx, x, y, w, h, 5); ctx.fillStyle = VC.back; ctx.fill(); }
+function wrapLines(ctx, str, maxW, maxLines){
+  const out = []; let line = '';
+  for(const ch of str){
+    if(ch==='\n'){ out.push(line); line = ''; continue; }
+    if(ctx.measureText(line+ch).width > maxW){ out.push(line); line = ch; } else line += ch;
+    if(out.length>=maxLines) break;
+  }
+  if(out.length<maxLines && line) out.push(line);
+  if(out.length>=maxLines && (line || str.length>out.join('').length)) out[maxLines-1] = out[maxLines-1].replace(/.$/, '…');
+  return out.slice(0, maxLines);
+}
+
+// 動画では略号(x/c/f)ではなく、ポーカーを知らなくても分かる語で出す
+function actWord(kind, to, bb){
+  const b = x => (bb>0 ? Math.round(x/bb*10)/10 : x)+'bb';
+  switch(kind){
+    case 'fold': return 'fold';
+    case 'check': return 'check';
+    case 'call': return 'call';
+    case 'bet': return 'bet '+b(to);
+    case 'raise': return 'raise '+b(to);
+    default: return 'all-in '+b(to);
+  }
+}
+function drawFrame(ctx, h, sim, f){
+  const bb = num(h.bb) || 1;
+  const bbs = x => String(Math.round(x/bb*10)/10);
+  ctx.fillStyle = VC.ink; ctx.fillRect(0, 0, VW, VH);
+
+  // header
+  vText(ctx, h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT'), 36, 68, '700 40px '+FONT_JP, VC.gold2);
+  const ante = (h.mode==='MTT'||h.anteOn) && num(h.ante) ? '(ANTE '+fmtC(num(h.ante))+')' : '';
+  let sub = 'Blind '+fmtC(num(h.sb))+'/'+fmtC(num(h.bb))+ante;
+  if(h.mode==='MTT' && (num(h.remain)||num(h.entries))) sub += '   '+(h.remain ? fmtC(num(h.remain)) : '?')+'/'+(h.entries ? fmtC(num(h.entries)) : '?')+(num(h.avg) ? ' Avg.'+fmt(num(h.avg)) : '');
+  vText(ctx, sub, 36, 112, '400 28px '+FONT_JP, VC.soft);
+  if(h.mode==='MTT' && h.sat) vText(ctx, 'サテライト'+(h.satCond ? ' 通過条件: '+h.satCond : ''), 36, 150, '400 26px '+FONT_JP, VC.soft);
+  vText(ctx, STREET_NAME[f.s].toUpperCase(), 36, 210, '700 36px '+FONT_EN, VC.gold);
+  vText(ctx, 'POT '+bbs(f.pot)+'bb', VW-36, 210, '700 36px '+FONT_EN, VC.gold2, 'right');
+
+  // table
+  const tx = 20, ty = 250, tw = 680, th = 810;
+  const cx = tx + tw/2, cy = ty + th/2;
+  const fx = tx + tw*0.07, fy = ty + th*0.28, fw = tw*0.86, fh = th*0.44;
+  rr(ctx, fx-18, fy-18, fw+36, fh+36, (fh+36)/2); ctx.fillStyle = VC.rail; ctx.fill();
+  rr(ctx, fx-6, fy-6, fw+12, fh+12, (fh+12)/2); ctx.fillStyle = VC.wood; ctx.fill();
+  rr(ctx, fx, fy, fw, fh, fh/2); ctx.fillStyle = VC.felt; ctx.fill();
+  rr(ctx, fx+16, fy+16, fw-32, fh-32, (fh-32)/2); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(247,244,236,0.22)'; ctx.stroke();
+  const keys = ['b0','b1','b2','b3','b4'].slice(0, f.boardN).filter(k => h.cards[k]);
+  const cw = 64, chh = 90, gap = 8;
+  const bw = keys.length*cw + Math.max(0, keys.length-1)*gap;
+  keys.forEach((k, i) => vCard(ctx, h.cards[k], cx - bw/2 + i*(cw+gap), cy - chh/2, cw, chh));
+
+  const list = POS[h.n] || POS[9];
+  const isEnd = f.k==='end';
+  const pw = 140, ph = 162;
+  const bubbles = [], chips = [];
+  const dealer = list.indexOf('BTN')>=0 ? 'BTN' : 'SB';
+  list.forEach(p => {
+    const xy = seatXY(p, h.n, th/tw);
+    const px = tx + tw*xy[0]/100, py = ty + th*xy[1]/100;
+    const x0 = px - pw/2, y0 = py - ph/2;
+    const pl = f.P[p];
+    const acting = f.k==='act' && f.pos===p;
+    rr(ctx, x0, y0, pw, ph, 16); ctx.fillStyle = acting ? VC.act : (pl.folded ? '#1c1a17' : VC.ink3); ctx.fill();
+    if(acting){ rr(ctx, x0, y0, pw, ph, 16); ctx.lineWidth = 6; ctx.strokeStyle = VC.gold; ctx.stroke(); }
+    const nameCol = pl.folded ? VC.fold : (p===h.heroPos ? VC.gold2 : VC.soft);
+    if(!pl.folded){
+      const v0 = h.cards['v_'+p+'_0'], v1 = h.cards['v_'+p+'_1'];
+      const legacy = isEnd && h.shown && h.shown[p] && String(h.shown[p]).trim();
+      if(isEnd && (v0 || v1)){
+        [v0, v1].forEach((c, i) => { const x = px - 54 + i*58; if(c) vCard(ctx, c, x, y0+10, 50, 70); else vBack(ctx, x, y0+10, 50, 70); });
+      }else if(legacy){
+        vText(ctx, String(h.shown[p]).trim(), px, y0+66, '700 40px '+FONT_JP, VC.gold2, 'center');
+      }else if(p===h.heroPos && (h.cards.h0||h.cards.h1)){
+        ['h0','h1'].forEach((k, i) => { const x = px - 54 + i*58; if(h.cards[k]) vCard(ctx, h.cards[k], x, y0+10, 50, 70); else vBack(ctx, x, y0+10, 50, 70); });
+      }else{
+        vBack(ctx, px-54, y0+10, 50, 70); vBack(ctx, px+4, y0+10, 50, 70);
+      }
+    }
+    vText(ctx, p, px, y0+114, '700 28px '+FONT_EN, nameCol, 'center');
+    if(pl.allin && !pl.folded) vText(ctx, 'ALL-IN', px, y0+146, '700 26px '+FONT_JP, VC.warn, 'center');
+    else if(pl.known) vText(ctx, bbs(pl.stack)+'bb', px, y0+146, '400 28px '+FONT_JP, pl.folded ? VC.fold : VC.soft, 'center');
+    if(pl.bet>0 && !pl.folded){
+      const fr = (xy[1]<20 || xy[1]>80) ? 0.5 : 0.45;
+      chips.push({x:px+(cx-px)*fr, y:py+(cy-py)*fr, t:bbs(pl.bet)+'bb'});
+    }
+    if(p===dealer){
+      ctx.beginPath(); ctx.arc(px-72, y0-26, 21, 0, Math.PI*2); ctx.fillStyle = VC.paper; ctx.fill();
+      vText(ctx, 'D', px-72, y0-18, '700 26px '+FONT_EN, VC.ink, 'center');
+    }
+    if(p===h.heroPos){
+      ctx.font = '700 22px '+FONT_JP;
+      const hw = ctx.measureText('HERO').width + 24;
+      rr(ctx, px-hw/2, y0-15, hw, 30, 15); ctx.fillStyle = VC.gold; ctx.fill();
+      vText(ctx, 'HERO', px, y0+7, '700 22px '+FONT_JP, VC.ink, 'center');
+    }
+    if(acting) bubbles.push({px:px, by:y0+ph+2, t:actWord(f.kind, f.to, bb)});
+  });
+  // 出したチップ(フェルトの上、席とテーブル中央の間)
+  chips.forEach(c => {
+    ctx.font = '700 28px '+FONT_JP;
+    const w = ctx.measureText(c.t).width, total = 34 + 8 + w, x0 = c.x - total/2;
+    ctx.beginPath(); ctx.ellipse(x0+17, c.y+6, 17, 9, 0, 0, Math.PI*2); ctx.fillStyle = '#8a6a35'; ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x0+17, c.y, 17, 9, 0, 0, Math.PI*2); ctx.fillStyle = VC.gold; ctx.fill();
+    vText(ctx, c.t, x0+42, c.y+10, '700 28px '+FONT_JP, VC.paper);
+  });
+  // 直前のアクションは席の下にラベルで出す(アプリの表示と同じ)。席より手前に描く
+  bubbles.forEach(b => {
+    ctx.font = '700 26px '+FONT_JP;
+    const w = ctx.measureText(b.t).width + 28;
+    rr(ctx, b.px-w/2, b.by, w, 34, 17); ctx.fillStyle = VC.gold; ctx.fill();
+    vText(ctx, b.t, b.px, b.by+26, '700 26px '+FONT_JP, VC.ink, 'center');
+  });
+
+  // bottom: hero hand + this street's log (end frame: memo)
+  const hc = ['h0','h1'].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
+  if(h.heroPos) vText(ctx, 'Hero  '+h.heroPos.toLowerCase()+'  '+hc, 36, 1138, '700 30px '+FONT_JP, VC.gold2);
+  let lines;
+  if(isEnd && h.memo && h.memo.trim()){
+    ctx.font = '400 30px '+FONT_JP;
+    lines = wrapLines(ctx, h.memo.trim(), VW-72, 3);
+  }else{
+    lines = sim.log[f.s].slice(0, f.n).slice(-3).map(e => e.pos.toLowerCase()+'  '+actWord(e.kind, e.to, bb));
+  }
+  lines.forEach((t, i) => vText(ctx, t, 36, 1178+i*40, '400 30px '+FONT_JP, VC.soft));
+}
+
+// 再生用の時間割(各コマの長さ)
+function buildTimeline(h){
+  const sim = simulate(h);
+  const tl = sim.frames.map(f => ({f:f, dur: f.k==='act' ? 1.2 : (f.k==='street' ? 1.8 : 2.2)}));
+  const last = sim.frames[sim.frames.length-1];
+  tl.push({f:Object.assign({}, last, {k:'end'}), dur: 4});
+  return {sim:sim, tl:tl, total: tl.reduce((a,x) => a + x.dur, 0)};
+}
+function frameAt(T, sec){
+  let acc = 0;
+  for(const x of T.tl){ if(sec < acc + x.dur) return x.f; acc += x.dur; }
+  return T.tl[T.tl.length-1].f;
+}
+// 画面上での再生(ループ)。一時停止・コマ送り・シークができる。canvasがDOMから消えたら止まる
+let replayCtl = null;
+function playReplay(canvas, h){
+  const ctx = canvas.getContext('2d');
+  const T = buildTimeline(h);
+  const starts = []; let acc = 0;
+  T.tl.forEach(x => { starts.push(acc); acc += x.dur; });
+  const ctl = {playing:true, t:0, last:null};
+  const sync = () => { const b = document.getElementById('rp-play'); if(b) b.textContent = ctl.playing ? '一時停止' : '再生'; };
+  const draw = () => {
+    drawFrame(ctx, h, T.sim, frameAt(T, Math.min(ctl.t, T.total - 0.001)));
+    const sl = document.getElementById('rp-seek');
+    if(sl && document.activeElement!==sl) sl.value = String(Math.round(ctl.t/T.total*1000));
+  };
+  ctl.toggle = () => { ctl.playing = !ctl.playing; sync(); };
+  ctl.seekRatio = r => { ctl.playing = false; ctl.t = Math.max(0, Math.min(1, r))*T.total; sync(); draw(); };
+  ctl.step = dir => { // 前/次のコマ(アクション)へ
+    ctl.playing = false;
+    let cur = 0; starts.forEach((st, i) => { if(st <= ctl.t + 0.01) cur = i; });
+    ctl.t = starts[Math.max(0, Math.min(starts.length-1, cur + dir))];
+    sync(); draw();
+  };
+  function tick(now){
+    if(!document.body.contains(canvas)) return;
+    try{
+      if(ctl.playing && ctl.last!==null){
+        ctl.t += (now - ctl.last)/1000;
+        if(ctl.t >= T.total) ctl.t = 0;
+      }
+      ctl.last = now;
+      draw();
+    }catch(e){ console.error(e); }
+    requestAnimationFrame(tick);
+  }
+  replayCtl = ctl;
+  draw();
+  requestAnimationFrame(tick);
+}
+// 動画ファイルの書き出し(実時間で録画する。MP4を優先し、使えなければWebM)
+let videoJob = {cancel:false};
+function pickMime(){
+  if(!window.MediaRecorder) return '';
+  const c = ['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];
+  for(const m of c){ if(MediaRecorder.isTypeSupported(m)) return m; }
+  return '';
+}
+function recordVideo(h, onProgress, job){
+  return new Promise((resolve, reject) => {
+    const mime = pickMime();
+    if(!mime || !HTMLCanvasElement.prototype.captureStream){ reject(new Error('unsupported')); return; }
+    const canvas = document.createElement('canvas');
+    canvas.width = VW; canvas.height = VH;
+    const ctx = canvas.getContext('2d');
+    const T = buildTimeline(h);
+    const rec = new MediaRecorder(canvas.captureStream(30), {mimeType:mime, videoBitsPerSecond:4000000});
+    const chunks = [];
+    rec.ondataavailable = e => { if(e.data && e.data.size) chunks.push(e.data); };
+    rec.onstop = () => {
+      if(job.cancel){ reject(new Error('cancel')); return; }
+      resolve({blob:new Blob(chunks, {type:mime.split(';')[0]}), ext: mime.indexOf('mp4')>=0 ? 'mp4' : 'webm'});
+    };
+    drawFrame(ctx, h, T.sim, T.tl[0].f); // 録画開始前に1コマ目を描いておく
+    rec.start();
+    let t0 = null;
+    function tick(now){
+      let finished = false;
+      try{
+        if(t0===null) t0 = now;
+        const sec = (now - t0)/1000;
+        if(job.cancel || sec >= T.total){
+          finished = true;
+          drawFrame(ctx, h, T.sim, T.tl[T.tl.length-1].f);
+          setTimeout(() => { try{ rec.stop(); }catch(e){} }, 300);
+        }else{
+          drawFrame(ctx, h, T.sim, frameAt(T, sec));
+          onProgress(sec/T.total, T.total);
+        }
+      }catch(e){ console.error(e); }
+      if(!finished) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+
+// 高速な書き出し: WebCodecsで1コマずつエンコードしてMP4にまとめる(実時間を待たない)。
+// 使えない環境(ライブラリが読めない、WebCodecs非対応)では、実時間で録画する方式に切り替える
+async function encodeVideo(h, onProgress, job){
+  if(!window.VideoEncoder || !window.VideoFrame || !window.Mp4Muxer) throw new Error('unsupported');
+  const FPS = 10;
+  const canvas = document.createElement('canvas');
+  canvas.width = VW; canvas.height = VH;
+  const ctx = canvas.getContext('2d');
+  const T = buildTimeline(h);
+  let cfg = null;
+  for(const codec of ['avc1.640028','avc1.4d0028','avc1.42001f']){
+    const r = await VideoEncoder.isConfigSupported({codec:codec, width:VW, height:VH, bitrate:2000000, framerate:FPS});
+    if(r.supported){ cfg = r.config; break; }
+  }
+  if(!cfg) throw new Error('unsupported');
+  const muxer = new Mp4Muxer.Muxer({target:new Mp4Muxer.ArrayBufferTarget(), video:{codec:'avc', width:VW, height:VH}, fastStart:'in-memory'});
+  let encErr = null;
+  const enc = new VideoEncoder({output:(chunk, meta) => muxer.addVideoChunk(chunk, meta), error:e => { encErr = e; }});
+  enc.configure(cfg);
+  const total = Math.ceil(T.total*FPS);
+  for(let i=0; i<total; i++){
+    if(job.cancel) throw new Error('cancel');
+    if(encErr) throw encErr;
+    drawFrame(ctx, h, T.sim, frameAt(T, i/FPS));
+    const vf = new VideoFrame(canvas, {timestamp:Math.round(i*1000000/FPS), duration:Math.round(1000000/FPS)});
+    enc.encode(vf, {keyFrame: i%FPS===0});
+    vf.close();
+    if(i%5===0){ onProgress(i/total); await new Promise(r => setTimeout(r, 0)); }
+  }
+  await enc.flush();
+  if(encErr) throw encErr;
+  muxer.finalize();
+  return {blob:new Blob([muxer.target.buffer], {type:'video/mp4'}), ext:'mp4'};
+}
+function makeVideo(h, onProgress, job){
+  return encodeVideo(h, onProgress, job).catch(err => {
+    if(job.cancel) throw err;
+    console.warn('高速な書き出しが使えないため、実時間で録画します', err);
+    return recordVideo(h, onProgress, job);
+  });
+}
+
+/* ================= actions ================= */
+function nextEmptySlot(key){
+  return groupOf(key).filter(k => !draft.cards[k])[0];
+}
+function resetDraft(){ draft = newDraft(); saveDraft(); }
+function clearActions(){
+  STREETS.forEach(s => { draft.actions[s] = []; });
+  ['b0','b1','b2','b3','b4'].forEach(k => { delete draft.cards[k]; });
+  Object.keys(draft.cards).forEach(k => { if(k.indexOf('v_')===0) delete draft.cards[k]; });
+  draft.raising = false; draft.amt = '';
+}
+function setupChanged(){ // ブラインド・人数・スタックが変わると既存のアクションは成立しない
+  if(STREETS.some(s => draft.actions[s].length)) clearActions();
+}
+function go(step){
+  draft.step = step; draft.raising = false; draft.amt = '';
+  saveDraft(); render(); window.scrollTo(0,0);
+  const bk = BOARD_KEYS[step];
+  if(bk && !simulate(draft).over){
+    const empty = bk.filter(k => !draft.cards[k])[0];
+    if(empty) openPicker(empty);
+  }
+}
+function nextStep(){
+  const ids = STEPS.map(s => s[0]);
+  if(STREETS.indexOf(draft.step)>=0 && simulate(draft).S[draft.step].over) return go('sum');
+  go(ids[ids.indexOf(draft.step)+1]);
+}
+function prevStep(){
+  const ids = STEPS.map(s => s[0]);
+  if(draft.step==='sum'){
+    const sim = simulate(draft);
+    if(sim.over) return go(STREETS.filter(s => sim.log[s].length).pop() || 'setup');
+  }
+  go(ids[Math.max(0, ids.indexOf(draft.step)-1)]);
+}
+function pushAction(act, amt){
+  const s = draft.step, sn = simulate(draft).S[s];
+  if(!sn.actor) return;
+  draft.actions[s].push({pos:sn.actor, act:act, amt:amt||''});
+  draft.raising = false; draft.amt = '';
+}
+
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-a]');
+  if(!t) return;
+  const a = t.dataset.a, d = draft;
+  if(a==='close'){
+    if(t.classList.contains('back') && e.target!==t) return;
+    closeLayer(); return;
+  }
+  switch(a){
+    case 'tab': tab = t.dataset.v; render(); window.scrollTo(0,0); return;
+    case 'mode': d.mode = t.dataset.v; setupChanged(); break;
+    case 'anteon': d.anteOn = !d.anteOn; if(d.anteOn && !d.anteManual && num(d.sb)>0) d.ante = String(num(d.sb)*2); setupChanged(); break;
+    case 'sat': d.sat = t.dataset.v==='true'; break;
+    case 'n':
+      d.n = +t.dataset.v; d.stacks = {};
+      if((POS[d.n]||[]).indexOf(d.heroPos)<0) d.heroPos = '';
+      setupChanged(); break;
+    case 'seat':
+      if(d.step==='setup'){ d.heroPos = d.heroPos===t.dataset.p ? '' : t.dataset.p; break; }
+      if(t.classList.contains('act')) return; // 手番の席はアクションを入力する(スタックは開かない)
+      openStack(t.dataset.p); return;
+    case 'phase': go(t.dataset.v); return;
+    case 'savestack': {
+      const p = t.closest('.sheet').dataset.p, v = $('#seatstack').value;
+      if(num(v)<=0){ toast('スタックは0より大きい値を入れてください'); return; }
+      if(p===d.heroPos){ d.stack = v; delete d.stacks[p]; } else d.stacks[p] = v;
+      closeLayer(); break;
+    }
+    case 'resetstack': {
+      delete d.stacks[t.closest('.sheet').dataset.p]; closeLayer(); break;
+    }
+    case 'slot': openPicker(t.dataset.k); return;
+    case 'pick': {
+      if(t.dataset.sel){ // 選択済みのカードをもう一度タップ: 解除して、その枠から選び直す
+        delete d.cards[t.dataset.sel];
+        saveDraft(); render(); openPicker(t.dataset.sel);
+        return;
+      }
+      const key = t.closest('.sheet').dataset.key;
+      d.cards[key] = t.dataset.c;
+      saveDraft(); render();
+      const nx = nextEmptySlot(key);
+      if(nx) openPicker(nx); else closeLayer();
+      return;
+    }
+    case 'clearslot': delete d.cards[t.dataset.k]; closeLayer(); break;
+    case 'next': nextStep(); return;
+    case 'prev': prevStep(); return;
+    case 'act': {
+      if(t.dataset.v==='allin'){
+        const sn0 = simulate(d).S[d.step];
+        if(sn0.actor && !sn0.P[sn0.actor].known){ d.raising = 'allin'; d.amt = ''; break; } // スタック不明の相手は金額を入力
+      }
+      pushAction(t.dataset.v); break;
+    }
+    case 'startraise': d.raising = true; d.amt = ''; break;
+    case 'cancelraise': d.raising = false; d.amt = ''; break;
+    case 'size': d.amt = String(t.dataset.v); break;
+    case 'commit': {
+      const sn = simulate(d).S[d.step];
+      const me = sn.P[sn.actor];
+      const amt = num(d.amt), maxTo = me.bet + me.stack;
+      if(d.raising==='allin'){
+        if(amt<=me.bet){ toast('オールインの額は '+fmt(me.bet)+' より大きくしてください'); return; }
+        pushAction('allin', String(amt)); break;
+      }
+      if(amt<=sn.current){ toast((sn.current===0?'ベット額':'レイズ後の額')+'は '+fmt(sn.current)+' より大きくしてください'); return; }
+      pushAction(amt>=maxTo ? 'allin' : (sn.current===0?'bet':'raise'), String(amt));
+      break;
+    }
+    case 'undo': d.actions[d.step].pop(); d.raising = false; break;
+    case 'result': d.result = t.dataset.v; break;
+    case 'tag': {
+      const i = d.tags.indexOf(t.dataset.t);
+      if(i>=0) d.tags.splice(i,1); else d.tags.push(t.dataset.t);
+      break;
+    }
+    case 'addtag': {
+      const el = $('#newtag'), v = el.value.trim();
+      if(v && d.tags.indexOf(v)<0) d.tags.push(v);
+      break;
+    }
+    case 'askreset': askReset(); return;
+    case 'reset': resetDraft(); closeLayer(); render(); window.scrollTo(0,0); return;
+    case 'save': {
+      const rec = clone(d);
+      delete rec.step; delete rec.amt; delete rec.raising; delete rec.seatMode;
+      if(rec.id){ hands = hands.map(h => h.id===rec.id ? rec : h); }
+      else{ rec.id = 'h'+Date.now(); rec.createdAt = Date.now(); hands.unshift(rec); }
+      save(KEY_HANDS, hands);
+      resetDraft(); tab = 'list'; render(); window.scrollTo(0,0);
+      openDetail(rec.id);
+      return;
+    }
+    case 'open': openDetail(t.dataset.id); return;
+    case 'edit': {
+      const h = hands.filter(x => x.id===t.dataset.id)[0];
+      if(!h) return;
+      draft = Object.assign(newDraft(), clone(h), {step:'sum'});
+      saveDraft(); closeLayer(); tab = 'rec'; render(); window.scrollTo(0,0);
+      return;
+    }
+    case 'share': openShare(t.dataset.id); return;
+    case 'sharetext': shareText(t.dataset.id); return;
+    case 'sharevideo': {
+      const h = getHand(t.dataset.id), c = h && cachedVideo(h);
+      if(c){ sendVideo(c, h.id); return; } // 準備ができていれば、そのまま共有シートを開く
+      startVideo(t.dataset.id); return;
+    }
+    case 'sendvideo': {
+      const h = getHand(t.dataset.id), c = h && cachedVideo(h);
+      if(c) sendVideo(c, h.id);
+      return;
+    }
+    case 'savevideo': {
+      const h = getHand(t.dataset.id), c = h && cachedVideo(h);
+      if(c) saveVideoFile(c, h.id);
+      return;
+    }
+    case 'rp-toggle': if(replayCtl) replayCtl.toggle(); return;
+    case 'rp-prev': if(replayCtl) replayCtl.step(-1); return;
+    case 'rp-next': if(replayCtl) replayCtl.step(1); return;
+    case 'askdel': askDelete(t.dataset.id); return;
+    case 'del':
+      hands = hands.filter(h => h.id!==t.dataset.id);
+      save(KEY_HANDS, hands); closeLayer(); render(); toast('削除しました'); return;
+    case 'ftag': {
+      const i = tagFilter.indexOf(t.dataset.t);
+      if(i>=0) tagFilter.splice(i,1); else tagFilter.push(t.dataset.t);
+      renderList(); return;
+    }
+    default: return;
+  }
+  saveDraft();
+  render();
+});
+
+document.addEventListener('input', e => {
+  const el = e.target;
+  if(el.getAttribute && /^(decimal|numeric)$/.test(el.getAttribute('inputmode')||'')){
+    const clean = el.value.replace(/[^0-9.]/g, '');
+    if(clean!==el.value) el.value = clean;
+  }
+  if(el.dataset && el.dataset.f){
+    const f = el.dataset.f;
+    draft[f] = el.value;
+    if(f==='sb'){
+      const dbl = num(el.value)>0 ? String(num(el.value)*2) : '';
+      if(!draft.bbManual){ draft.bb = dbl; const b = $('#f-bb'); if(b) b.value = dbl; }
+      if(!draft.anteManual){ draft.ante = dbl; const a = $('#f-ante'); if(a) a.value = dbl; }
+    }
+    if(f==='bb') draft.bbManual = el.value!=='';
+    if(f==='ante') draft.anteManual = el.value!=='';
+    if(SETUP_FIELDS.indexOf(f)>=0) setupChanged();
+    saveDraft();
+    if(draft.step==='setup'){
+      const nb = document.querySelector('[data-a="next"]'), hint = $('#setup-hint');
+      if(nb) nb.disabled = !setupReady();
+      if(hint) hint.hidden = setupReady();
+    }
+  }
+  else if(el.id==='rp-seek'){ if(replayCtl) replayCtl.seekRatio(el.value/1000); }
+  else if(el.id==='amt'){ draft.amt = el.value; saveDraft(); }
+  else if(el.id==='memo' || el.id==='satcond'){
+    if(el.id==='memo') draft.memo = el.value;
+    else draft.satCond = el.value;
+    saveDraft();
+    const pv = $('#preview'); if(pv) pv.textContent = toText(draft);
+  }
+  else if(el.id==='q'){
+    q = el.value;
+    const shown = filteredHands();
+    $('#results').innerHTML = shown.length ? shown.map(handCard).join('') : '<p class="empty">条件に合うハンドがありません</p>';
+    const c = document.querySelector('.count'); if(c) c.textContent = shown.length+'件';
+  }
+});
+
+render();
+})();
+</script>
+</body>
+</html>

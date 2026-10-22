@@ -1,0 +1,17 @@
+{
+  "name": "SpotMemo",
+  "short_name": "SpotMemo",
+  "description": "ポーカーのハンドを記録して、リプレイ動画で振り返る",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#141311",
+  "theme_color": "#141311",
+  "icons": [
+    { "src": "icons/icon-192-v1.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512-v1.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
