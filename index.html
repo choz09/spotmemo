@@ -1416,8 +1416,9 @@ document.addEventListener('click', e => {
       if(rec.id){ hands = hands.map(h => h.id===rec.id ? rec : h); }
       else{ rec.id = 'h'+Date.now(); rec.createdAt = Date.now(); hands.unshift(rec); }
       save(KEY_HANDS, hands);
-      resetDraft(); tab = 'list'; render(); window.scrollTo(0,0);
-      openDetail(rec.id);
+      resetDraft(); tab = 'rec'; render(); window.scrollTo(0,0);
+      toast('保存しました。一覧から共有できます');
+      prepareVideo(rec); // 一覧から共有するときすぐ開けるよう、動画を裏で先に作っておく
       return;
     }
     case 'open': openDetail(t.dataset.id); return;
