@@ -487,14 +487,14 @@ function toText(h){
     groups.forEach(g => {
       const isHero = g.pos===h.heroPos;
       if(s==='pre' && !isHero && g.toks.every(t => t==='f')) return; // プリフロップのフォールドは書かない
-      const head = g.pos.toLowerCase()+(s==='pre' && isHero && heroCards ? ' ('+heroCards+')' : '');
+      const head = g.pos+(s==='pre' && isHero && heroCards ? ' ('+heroCards+')' : '');
       out.push(head+(g.toks.length ? ' '+g.toks.join(' / ') : ''));
     });
     if(s===lastStreet){
       order.forEach(p => {
         const vc = [h.cards['v_'+p+'_0'], h.cards['v_'+p+'_1']].filter(Boolean).join('');
         const shown = vc || (h.shown && h.shown[p] ? String(h.shown[p]).trim() : ''); // 古い記録の文字入力も残す
-        if(shown) out.push(p.toLowerCase()+' '+shown);
+        if(shown) out.push(p+' '+shown);
       });
     }
     blocks.push(out.join('\n'));
@@ -722,7 +722,7 @@ function streetPanel(s, sim){
   const nextName = last ? '保存へ' : {pre:'Flopへ',flop:'Turnへ',turn:'Riverへ'}[s];
   if(!d.raising){
     const bb = num(d.bb);
-    if(log.length) body += '<p class="logline">'+esc(log.map(e => e.pos.toLowerCase()+' '+actToken(e.kind, e.to, bb)).join(' ・ '))+'</p>';
+    if(log.length) body += '<p class="logline">'+esc(log.map(e => e.pos+' '+actToken(e.kind, e.to, bb)).join(' ・ '))+'</p>';
     body += '<div class="navrow">'+(log.length ? '<button class="chip" data-a="undo">1つ戻す</button>' : '')+
       '<button class="btn main" data-a="next"'+(canNext?'':' disabled')+'>'+nextName+'</button></div>';
   }
@@ -1134,13 +1134,13 @@ function drawFrame(ctx, h, sim, f){
 
   // bottom: hero hand + this street's log (end frame: memo)
   const hc = ['h0','h1'].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
-  if(h.heroPos) vText(ctx, 'Hero  '+h.heroPos.toLowerCase()+'  '+hc, 36, 1138, '700 30px '+FONT_JP, VC.gold2);
+  if(h.heroPos) vText(ctx, 'Hero  '+h.heroPos+'  '+hc, 36, 1138, '700 30px '+FONT_JP, VC.gold2);
   let lines;
   if(isEnd && h.memo && h.memo.trim()){
     ctx.font = '400 30px '+FONT_JP;
     lines = wrapLines(ctx, h.memo.trim(), VW-72, 3);
   }else{
-    lines = sim.log[f.s].slice(0, f.n).slice(-3).map(e => e.pos.toLowerCase()+'  '+actWord(e.kind, e.to, bb));
+    lines = sim.log[f.s].slice(0, f.n).slice(-3).map(e => e.pos+'  '+actWord(e.kind, e.to, bb));
   }
   lines.forEach((t, i) => vText(ctx, t, 36, 1178+i*40, '400 30px '+FONT_JP, VC.soft));
 }
