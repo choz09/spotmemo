@@ -341,7 +341,8 @@ function simulate(h){
   const out = {S:{}, log:{}, frames:[], over:false, winner:null, init:init};
 
   const ante = (h.mode==='MTT' || h.anteOn) ? num(h.ante) : 0;
-  if(ante>0) L.forEach(p => {
+  // ANTEはBBアンテ: BBの人だけが払う(全員が払う方式はない)
+  if(ante>0) ['BB'].forEach(p => {
     const x = Math.min(ante, P[p].stack);
     P[p].stack -= x; P[p].total += x; pot += x;
     if(P[p].stack<=0) P[p].allin = true;
@@ -630,6 +631,7 @@ function setupView(){
     (anteShown ? '<div><label class="f" for="f-ante">ANTE</label><input id="f-ante" data-f="ante" type="text" inputmode="decimal" pattern="[0-9.]*" autocomplete="off" enterkeyhint="done" value="'+esc(d.ante)+'"></div>' : '')+
   '</div>'+
   (mtt ? '' : '<div class="row" style="margin-top:10px"><button class="chip'+(d.anteOn?' on':'')+'" data-a="anteon">ANTEあり</button></div>')+
+  (anteShown ? '<p class="hint">ANTEはBBアンテとして計算します(BBの人だけが払います)。</p>' : '')+
   '</section>'+
   (mtt ?
     '<section><h2>トーナメント情報</h2>'+
