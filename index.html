@@ -444,14 +444,28 @@ function actToken(kind, to, bb){
     default: return 'AI '+b(to);
   }
 }
-// 文字保存の形式(ユーザー指定の例に合わせる): 金額はBB単位、ポジションは小文字、
-// 同じ人の動きは「/」でつなぐ。ポジションは必ず書く
+// 文字保存の書き方(2026-10-23 ユーザー指定の②): 見出しは日本語、ポットは見出しの横(そのストリートの最初のポット)。
+// そのストリートの最初のベット/レイズは金額だけ、2回目以降のレイズは `r 金額`、オールインは `AI 金額`。金額はBB単位
+function textTokens(log, bb){
+  const b = x => (bb>0 ? Math.round(x/bb*10)/10 : x)+'bb';
+  let aggr = 0;
+  return log.map(e => {
+    switch(e.kind){
+      case 'fold': return 'f';
+      case 'check': return 'x';
+      case 'call': return 'c';
+      case 'allin': aggr++; return 'AI '+b(e.to);
+      default: { const first = aggr===0; aggr++; return first ? b(e.to) : 'r '+b(e.to); }
+    }
+  });
+}
+const JP_STREET = {pre:'プリフロップ', flop:'フロップ', turn:'ターン', river:'リバー'};
 function toText(h){
   const sim = simulate(h);
   const bb = num(h.bb);
   const bbf = x => (bb>0 ? Math.round(x/bb*10)/10 : x)+'bb';
   const lines = [];
-  lines.push(h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT'));
+  lines.push((h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT'))+' ('+h.n+'-max)');
   const ante = (h.mode==='MTT'||h.anteOn) && num(h.ante) ? '(ANTE '+fmtC(num(h.ante))+')' : '';
   lines.push('Blind：'+fmtC(num(h.sb))+'/'+fmtC(bb)+ante);
   const myStack = num(h.stack) > 0 ? fmt(num(h.stack)) : '';
@@ -463,40 +477,40 @@ function toText(h){
   }
 
   const heroCards = ['h0','h1'].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
-  const tokenOf = e => actToken(e.kind, e.to, bb);
   const reached = STREETS.filter(s => sim.log[s].length || (BOARD_KEYS[s] && BOARD_KEYS[s].some(k => h.cards[k])) || s==='pre');
   const lastStreet = reached[reached.length-1];
   const order = POS[h.n] || POS[9];
   const blocks = [];
   reached.forEach(s => {
     const log = sim.log[s];
+    const toks = textTokens(log, bb);
     const out = [];
-    if(s==='pre') out.push('【 Preflop 】');
+    if(s==='pre') out.push(JP_STREET.pre);
     else{
       const bk = BOARD_KEYS[s].filter(k => h.cards[k]).map(k => h.cards[k]).join('');
-      out.push('【 '+STREET_NAME[s]+' 】');
-      out.push(''); // Flop/Turn/Riverの見出しのあとは1行空ける
-      out.push(bk+' ('+bbf(sim.S[s].potStart)+')');
-      out.push(''); // ボードの行のあとも1行空ける
+      out.push(JP_STREET[s]+' ( pot  '+bbf(sim.S[s].potStart)+' )');
+      out.push(bk);
+      out.push(''); // ボードの行のあとは1行空ける
     }
     const groups = [];
-    log.forEach(e => {
+    log.forEach((e, i) => {
       let g = groups.filter(x => x.pos===e.pos)[0];
       if(!g){ g = {pos:e.pos, toks:[]}; groups.push(g); }
-      g.toks.push(tokenOf(e));
+      g.toks.push(toks[i]);
     });
     if(s==='pre' && h.heroPos && !groups.some(g => g.pos===h.heroPos)) groups.push({pos:h.heroPos, toks:[]});
     groups.forEach(g => {
       const isHero = g.pos===h.heroPos;
       if(s==='pre' && !isHero && g.toks.every(t => t==='f')) return; // プリフロップのフォールドは書かない
-      const head = g.pos+(s==='pre' && isHero && heroCards ? ' ('+heroCards+')' : '');
-      out.push(head+(g.toks.length ? ' '+g.toks.join(' / ') : ''));
+      let body = (s==='pre' && isHero && heroCards) ? '('+heroCards+')' : '';
+      if(g.toks.length) body += (body ? ' ' : '')+g.toks.join(' / ');
+      out.push(g.pos+'  '+body); // ポジションのあとはスペース2つ
     });
     if(s===lastStreet){
       order.forEach(p => {
         const vc = [h.cards['v_'+p+'_0'], h.cards['v_'+p+'_1']].filter(Boolean).join('');
         const shown = vc || (h.shown && h.shown[p] ? String(h.shown[p]).trim() : ''); // 古い記録の文字入力も残す
-        if(shown) out.push(p+' '+shown);
+        if(shown) out.push(p+'  '+shown);
       });
     }
     while(out.length && out[out.length-1]==='') out.pop(); // アクションがないときの余分な空行は消す
