@@ -24,8 +24,27 @@
   --paper:#f7f4ec; --red:#b8382e; --back:#6b2d2a;
   --felt:#2d6a4a; --wood:#b8874f; --rail:#24221f;
   --mint:#8fc7b0; --warn:#dd8f84;
+  --on-gold:#141311; --card-ink:#141311; --act-bg:#4d3b20; --cur:#e4c483;
+  --disabled:#7d7568; --placeholder:#9a917f; --meter:#4a4132; --chip-edge:#8a6a35;
+  --fold-bg:#1a1815; --fold-text:#8f887b;
   --r:8px;
 }
+/* ライト: クリーム色の紙に、濃い茶と銅色(2026-10-25)。テーブルの緑・カード・動画は、ダークと同じ */
+:root[data-theme="light"]{
+  --ink:#f5f1dc; --ink2:#e9e2c7; --ink3:#ddd3b4;
+  --gold:#82522a; --gold-2:#5d3d27;
+  --soft:#3b2a1c; --muted:#6d5c47;
+  --paper:#fffdf5; --rail:#4a3a2a;
+  --mint:#2f6f58; --warn:#a3392e;
+  --on-gold:#fffdf5; --act-bg:#eadcb0; --cur:#d9b56b;
+  --disabled:#7d6e58; --placeholder:#8a7e68; --meter:#c9bd9c; --chip-edge:#5a3a1a;
+  --fold-bg:#e4dcc0; --fold-text:#6d5c47;
+  color-scheme:light;
+}
+/* ライトの、選択中のタブ・切り替えと、手番の席の強調(ダークより差が出にくいので、濃い面にする) */
+:root[data-theme="light"] .phases button.on,
+:root[data-theme="light"] .seg button.on{background:var(--gold);color:var(--on-gold)}
+:root[data-theme="light"] .plate.act{box-shadow:0 0 0 4px rgba(130,82,42,.25)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;background:var(--ink);color:var(--soft);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-size:15px;line-height:1.6;word-break:auto-phrase;overflow-wrap:break-word}
 button,input,textarea{font:inherit;color:inherit}
@@ -44,10 +63,10 @@ p{margin:0}
 .seg button{flex:1;white-space:nowrap;padding:11px 4px;border-radius:6px;color:var(--muted);font-size:14px}
 .seg button.on{background:var(--ink3);color:var(--gold-2);font-weight:700}
 .chip{padding:11px 16px;min-height:44px;border-radius:999px;background:var(--ink2);color:var(--soft);font-size:14px;min-width:44px;text-align:center}
-.chip.on{background:var(--gold);color:var(--ink);font-weight:700}
+.chip.on{background:var(--gold);color:var(--on-gold);font-weight:700}
 label.f{display:block;font-size:13px;color:var(--muted);margin-bottom:4px}
 input[type=text],input[type=search],input[type=number],textarea{width:100%;background:var(--ink2);border:1px solid var(--ink3);border-radius:var(--r);padding:11px 12px;font-size:16px;outline:none}
-input::placeholder,textarea::placeholder{color:#9a917f}
+input::placeholder,textarea::placeholder{color:var(--placeholder)}
 input:focus,textarea:focus{border-color:var(--gold)}
 textarea{min-height:96px;resize:vertical}
 .grid{display:grid;gap:10px}
@@ -55,14 +74,14 @@ textarea{min-height:96px;resize:vertical}
 .hint{margin-top:10px;font-size:14px;color:var(--soft)}
 .btns{display:flex;gap:10px;margin-top:24px}
 .btn{flex:1;padding:15px;border-radius:var(--r);font-weight:700;font-size:16px;background:var(--ink2);color:var(--soft)}
-.btn.main{background:var(--gold);color:var(--ink)}
+.btn.main{background:var(--gold);color:var(--on-gold)}
 .btn.main:disabled{background:var(--ink3);color:var(--soft)}
 .btn.quiet{background:none;font-size:14px;font-weight:400;padding:12px}
 .btn.danger{color:var(--warn)}
 .btn.slim{flex:.5}
 
 /* cards */
-.card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--paper);color:var(--ink);border-radius:4px;width:34px;height:48px;font-weight:700;font-size:17px;line-height:1;gap:1px}
+.card{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;background:var(--paper);color:var(--card-ink);border-radius:4px;width:34px;height:48px;font-weight:700;font-size:17px;line-height:1;gap:1px}
 .card i{font-style:normal;font-size:15px}
 .card.r{color:var(--red)}
 .card.sm{width:26px;height:38px;font-size:14px}
@@ -93,15 +112,16 @@ textarea{min-height:96px;resize:vertical}
 .plate .lab{font-family:Cinzel,serif;font-weight:700;font-size:12px;line-height:1.15}
 .plate .stk{min-height:13px;font-size:12px;color:var(--muted);line-height:1.1}
 .plate.hero .lab{color:var(--gold-2)}
-.plate.hero::before{content:'HERO';position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--ink);font-size:12px;font-weight:700;line-height:18px;padding:0 7px;border-radius:999px;letter-spacing:.04em}
-.plate.fold{opacity:.6;background:var(--ink2)}
-.plate.act{border-color:var(--gold);background:#4d3b20}
+.plate.hero::before{content:'HERO';position:absolute;top:-15px;left:50%;transform:translateX(-50%);background:var(--gold);color:var(--on-gold);font-size:12px;font-weight:700;line-height:18px;padding:0 7px;border-radius:999px;letter-spacing:.04em}
+.plate.fold{background:var(--fold-bg);color:var(--fold-text)}
+.plate.fold .lab,.plate.fold .stk{color:var(--fold-text)}
+.plate.act{border-color:var(--gold);background:var(--act-bg)}
 .plate.act .lab{color:var(--gold-2)}
 .plate.sel{border-color:var(--gold)}
 .bet{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:4px;white-space:nowrap;font-size:12px;font-weight:700;color:var(--paper)}
-.bet::before{content:'';width:14px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 3px 0 #8a6a35}
+.bet::before{content:'';width:14px;height:8px;border-radius:50%;background:var(--gold);box-shadow:0 3px 0 var(--chip-edge)}
 .lastact{position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:2px;white-space:nowrap;font-size:12px;font-weight:700;line-height:16px;color:var(--gold-2);background:var(--ink);padding:0 6px;border-radius:6px;z-index:1}
-.dealer{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--paper);color:var(--ink);font-family:Cinzel,serif;font-weight:700;font-size:14px;line-height:26px;text-align:center;z-index:1}
+.dealer{position:absolute;transform:translate(-50%,-50%);width:26px;height:26px;border-radius:50%;background:var(--paper);color:var(--card-ink);font-family:Cinzel,serif;font-weight:700;font-size:14px;line-height:26px;text-align:center;z-index:1}
 .tag-allin{font-size:12px;color:var(--warn);font-weight:700;line-height:1.1;min-height:13px}
 
 /* actions */
@@ -109,7 +129,7 @@ textarea{min-height:96px;resize:vertical}
 .acts button{padding:11px 0;background:var(--ink2);border-radius:var(--r);color:var(--gold-2);font-weight:700;font-size:16px}
 .acts button:active{background:var(--ink3)}
 .turn{margin-top:2px;font-size:14px;color:var(--soft)}
-.turn b{background:var(--gold);color:var(--ink);font-family:Cinzel,serif;padding:2px 10px;border-radius:999px;margin-right:4px}
+.turn b{background:var(--gold);color:var(--on-gold);font-family:Cinzel,serif;padding:2px 10px;border-radius:999px;margin-right:4px}
 .log{list-style:none;margin:10px 0 0;padding:0}
 .log li{display:flex;gap:10px;padding:6px 0;font-size:14px}
 .log li b{color:var(--gold-2);min-width:76px;font-family:Cinzel,serif;font-size:13px}
@@ -120,7 +140,7 @@ textarea{min-height:96px;resize:vertical}
 .phases{display:flex;gap:4px;overflow-x:auto;margin:0 -4px 8px}
 .phases button{flex:1;padding:9px 8px;border-radius:8px;color:var(--soft);font-size:13px;white-space:nowrap}
 .phases button.on{background:var(--ink3);color:var(--gold-2);font-weight:700}
-.phases button:disabled{color:#7d7568}
+.phases button:disabled{color:var(--disabled)}
 .panel .seg{background:var(--ink)}
 .panel .seg button.on{background:var(--ink3)}
 .panel input[type=text],.panel input[type=search],.panel textarea{background:var(--ink)}
@@ -164,20 +184,20 @@ nav.tabs button.on{color:var(--gold-2);font-weight:700}
 .sheet{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:var(--ink);border-radius:14px 14px 0 0;padding:20px 16px calc(20px + env(safe-area-inset-bottom))}
 .sheet h3{margin:0 0 14px;font-family:"Zen Old Mincho",serif;font-size:18px;color:var(--gold-2)}
 .picker{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:20px}
-.picker button{height:52px;background:var(--paper);color:var(--ink);border-radius:3px;font-weight:700;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
+.picker button{height:52px;background:var(--paper);color:var(--card-ink);border-radius:3px;font-weight:700;font-size:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1.05}
 .picker button i{font-style:normal;font-size:15px}
 .picker button.r{color:var(--red)}
 .rival{display:flex;align-items:center;gap:6px}
 .rival .lab{min-width:46px;font-size:13px;color:var(--soft);font-family:Cinzel,serif;font-weight:700}
 .picker button:disabled{opacity:.18}
-.picker button.cur{background:var(--gold-2)}
+.picker button.cur{background:var(--cur)}
 .rpctl{display:flex;gap:8px;justify-content:center;margin-top:10px}
 input[type=range]{display:block;width:100%;margin:10px 0 0;accent-color:var(--gold)}
 .rp{display:block;margin:0 auto;height:min(62vh,640px);aspect-ratio:9/16;max-width:100%;background:var(--ink);border-radius:var(--r)}
 .sheet .btn{background:var(--ink3)}
 .sheet .btn.main{background:var(--gold)}
 .sheet .btn.quiet{background:none}
-.meter{height:10px;background:#4a4132;border-radius:5px;margin-top:16px;overflow:hidden}
+.meter{height:10px;background:var(--meter);border-radius:5px;margin-top:16px;overflow:hidden}
 .meter div{height:100%;width:0;background:var(--gold)}
 .toast{position:fixed;left:50%;bottom:calc(80px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--ink3);color:var(--gold-2);padding:10px 18px;border-radius:999px;font-size:14px;z-index:30;max-width:90%;text-align:center}
 </style>
@@ -219,6 +239,7 @@ const SLOT_NAMES = {h0:'Hero 1枚目',h1:'Hero 2枚目',b0:'フロップ 1枚目
 const SETUP_FIELDS = ['sb','bb','ante','stack'];
 const KEY_HANDS = 'pokermemo.hands.v2';
 const KEY_DRAFT = 'pokermemo.draft.v2';
+const KEY_THEME = 'pokermemo.theme.v1';
 
 /* ================= storage ================= */
 function load(key, fallback){
@@ -280,6 +301,20 @@ function stackOf(h, p){
   const raw = h.stacks[p];
   if(raw!=null && raw!=='') return num(raw);
   return p===h.heroPos ? num(h.stack) : STACK_UNKNOWN;
+}
+
+/* ================= theme ================= */
+let theme = load(KEY_THEME, 'dark') === 'light' ? 'light' : 'dark';
+function applyTheme(t){
+  document.documentElement.dataset.theme = t;
+  const m = document.querySelector('meta[name="theme-color"]');
+  if(m) m.setAttribute('content', t==='light' ? '#f5f1dc' : '#141311');
+}
+applyTheme(theme);
+function themeSeg(){
+  return '<section><h2>表示</h2><div class="seg">'+
+    [['dark','ダーク'],['light','ライト']].map(m => '<button data-a="theme" data-v="'+m[0]+'" class="'+(theme===m[0]?'on':'')+'">'+m[1]+'</button>').join('')+
+  '</div></section>';
 }
 
 /* ================= state ================= */
@@ -666,6 +701,7 @@ function setupView(){
   '</section>'+
   '<section><h2>自分の席と手札</h2><p class="hint" style="margin-top:0">上のテーブルで自分の席をタップし、手札を2枚選びます。</p>'+
     '<div class="hero-cards"><span class="lab">'+esc(d.heroPos||'席未選択')+'</span>'+slotHTML('h0','big')+slotHTML('h1','big')+'</div></section>'+
+  themeSeg()+
   '<div class="btns"><button class="btn main" data-a="next"'+(ready?'':' disabled')+'>Preflopへ</button></div>'+
   '<p class="hint" id="setup-hint"'+(ready?' hidden':'')+'>'+(missing.length ? esc(missing.join('・'))+'を入れると進めます。' : '')+'</p>';
 }
@@ -830,7 +866,8 @@ function renderList(){
     '<section style="margin-top:8px"><input id="q" type="search" placeholder="メモ・タグ・ハンドで検索" value="'+esc(q)+'">'+
     (tags.length?'<div class="row" style="margin-top:10px">'+tags.map(t=>'<button class="chip'+(tagFilter.indexOf(t)>=0?' on':'')+'" data-a="ftag" data-t="'+esc(t)+'">'+esc(t)+'</button>').join('')+'</div>':'')+
     '<div class="count">'+shown.length+'件</div></section>'+
-    '<div id="results">'+(shown.length ? shown.map(handCard).join('') : '<p class="empty">'+(hands.length?'条件に合うハンドがありません':'まだ記録がありません。「記録」タブから最初の1ハンドを残しましょう。')+'</p>')+'</div>';
+    '<div id="results">'+(shown.length ? shown.map(handCard).join('') : '<p class="empty">'+(hands.length?'条件に合うハンドがありません':'まだ記録がありません。「記録」タブから最初の1ハンドを残しましょう。')+'</p>')+'</div>'+
+    themeSeg();
 }
 function render(){
   renderTabs();
@@ -1367,6 +1404,7 @@ document.addEventListener('click', e => {
       if(t.classList.contains('act')) return; // 手番の席はアクションを入力する(スタックは開かない)
       openStack(t.dataset.p); return;
     case 'phase': go(t.dataset.v); return;
+    case 'theme': theme = t.dataset.v==='light' ? 'light' : 'dark'; save(KEY_THEME, theme); applyTheme(theme); break;
     case 'savestack': {
       const p = t.closest('.sheet').dataset.p, v = $('#seatstack').value;
       if(num(v)<=0){ toast('スタックは0より大きい値を入れてください'); return; }
