@@ -45,7 +45,10 @@
 :root[data-theme="light"] .phases button.on,
 :root[data-theme="light"] .seg button.on{background:var(--gold);color:var(--on-gold)}
 :root[data-theme="light"] .plate.act{box-shadow:0 0 0 4px rgba(130,82,42,.25)}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+/* ボタンを素早く連続で押しても、ダブルタップで画面が拡大しないようにする(2本指の拡大は使える)。
+   連続タップで文字が選択されるのも防ぐ(入力欄は除く) */
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+button,.plate,.table,nav.tabs{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 html,body{margin:0;background:var(--ink);color:var(--soft);font-family:"Zen Kaku Gothic New",system-ui,sans-serif;font-size:15px;line-height:1.6;word-break:auto-phrase;overflow-wrap:break-word}
 button,input,textarea{font:inherit;color:inherit}
 button{cursor:pointer;border:0;background:none;padding:0}
