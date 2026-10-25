@@ -250,7 +250,7 @@ function load(key, fallback){
   catch(e){ return fallback; }
 }
 function save(key, val){
-  try{ localStorage.setItem(key, JSON.stringify(val)); }catch(e){}
+  try{ localStorage.setItem(key, JSON.stringify(val)); return true; }catch(e){ return false; }
 }
 
 /* ================= helpers ================= */
@@ -279,7 +279,6 @@ function cardHTML(code, size){
   const cls = ['card', size||'', (code[1]==='h'||code[1]==='d')?'r':''].join(' ');
   return '<span class="'+cls+'">'+code[0]+'<i>'+SUITS[code[1]]+'</i></span>';
 }
-function cardText(code){ return code[0]+SUITS[code[1]]; }
 function fmtDate(ts){
   const d = new Date(ts);
   return (d.getMonth()+1)+'/'+d.getDate()+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
@@ -290,7 +289,6 @@ function toast(msg){
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2200);
 }
-function posLabel(p, h){ return p===h.heroPos ? p+'(Hero)' : p; }
 function modeName(h){
   return h.mode==='RING' ? 'RING GAME' : (h.tname || 'TOURNAMENT')+(h.sat?' (SATELLITE)':'');
 }
@@ -326,15 +324,29 @@ function newDraft(){
     id:null, createdAt:null, step:'setup',
     mode:'MTT', bbManual:false, anteManual:false, tname:'', sat:false, satCond:'', remain:'', entries:'', avg:'', shown:{},
     sb:'', bb:'', ante:'', anteOn:false,
-    n:9, stack:'', stacks:{}, seatMode:'hero',
+    n:9, stack:'', stacks:{},
     heroPos:'', cards:{},
     actions:{pre:[],flop:[],turn:[],river:[]},
     amt:'', raising:false,
     result:'', tags:[], memo:''
   };
 }
-let hands = load(KEY_HANDS, []);
-let draft = Object.assign(newDraft(), load(KEY_DRAFT, {}));
+// 読み込んだ記録・下書きの、足りない項目を補う(古い形式や壊れた値で、画面が固まらないように)
+function normHand(h){
+  const o = Object.assign(newDraft(), h && typeof h==='object' ? h : {});
+  const acts = (h && h.actions && typeof h.actions==='object') ? h.actions : {};
+  o.actions = {};
+  ['pre','flop','turn','river'].forEach(k => { o.actions[k] = Array.isArray(acts[k]) ? acts[k] : []; });
+  if(!Array.isArray(o.tags)) o.tags = [];
+  ['cards','stacks','shown'].forEach(k => { if(!o[k] || typeof o[k]!=='object' || Array.isArray(o[k])) o[k] = {}; });
+  if(typeof o.memo!=='string') o.memo = '';
+  if(!POS[o.n]) o.n = 9;
+  return o;
+}
+const loadedHands = load(KEY_HANDS, []);
+let hands = Array.isArray(loadedHands) ? loadedHands.filter(x => x && typeof x==='object').map(normHand) : [];
+let draft = normHand(load(KEY_DRAFT, {}));
+if(!STEPS.some(x => x[0]===draft.step)) draft.step = 'setup';
 if(draft.step==='seat') draft.step = 'setup';
 let tab = 'rec';
 let q = '';
@@ -413,7 +425,7 @@ function simulate(h){
       const p = queue.shift();
       const me = P[p];
       const toCall = Math.max(0, current - me.bet);
-      let text = '', kind = a.act, total = 0;
+      let text = '', kind = a.act, total = 0, raised = false;
       if(a.act==='fold'){
         me.folded = true; text = 'fold';
       }else if(a.act==='check'){
@@ -432,7 +444,8 @@ function simulate(h){
         if(a.act==='allin'){ me.stack = 0; me.allin = true; }
         text = (me.allin ? 'all-in ' : (wasBet ? 'bet ' : 'raise to '))+fmt(me.bet);
         kind = me.allin ? 'allin' : (wasBet ? 'bet' : 'raise'); total = me.bet;
-        if(me.bet > current){
+        raised = me.bet > current;
+        if(raised){
           // レイズ(現在額を上回るAll-inを含む)で、他の全員にもう一度手番が回る。
           // 現在額に届かないショートAll-inは手番を再開させない
           current = me.bet;
@@ -441,21 +454,22 @@ function simulate(h){
           queue = ord.slice(i+1).concat(ord.slice(0,i)).filter(x => x!==p && !P[x].folded && !P[x].allin);
         }
       }
-      out.log[s].push({pos:p, text:text, kind:kind, to:total});
+      out.log[s].push({pos:p, text:text, kind:kind, to:total, raised:raised});
       out.frames.push({k:'act', s:s, n:out.log[s].length, pos:p, kind:kind, to:total, P:clone(P), pot:pot, boardN:BOARD_LEN[s]});
       const alive = L.filter(x => !P[x].folded);
       if(alive.length===1){ out.over = true; out.winner = alive[0]; queue = []; }
     });
 
     const closed = queue.length===0;
-    if(closed && !out.over){
-      // 誰にもコールされなかった分は戻す
+    if(closed){
+      // 誰にもコールされなかった分は戻す(全員がフォールドして1人が残ったときも同じ)
       const bets = L.map(p => [p, P[p].bet]).sort((a,b) => b[1]-a[1]);
       const diff = bets[0][1] - (bets[1] ? bets[1][1] : 0);
       if(diff>0 && !P[bets[0][0]].folded){
         const t = P[bets[0][0]];
         t.bet -= diff; t.total -= diff; t.stack += diff; pot -= diff;
         if(t.stack>0) t.allin = false;
+        out.frames.push({k:'refund', s:s, n:out.log[s].length, P:clone(P), pot:pot, boardN:BOARD_LEN[s]});
       }
     }
     out.S[s] = {P:clone(P), pot:pot, potStart:potStart, current:current, queue:queue.slice(), actor:queue[0]||null, closed:closed, over:out.over};
@@ -492,7 +506,7 @@ function textTokens(log, bb){
       case 'fold': return 'f';
       case 'check': return 'x';
       case 'call': return 'c';
-      case 'allin': aggr++; return 'AI '+b(e.to);
+      case 'allin': if(e.raised) aggr++; return 'AI '+b(e.to);
       default: { const first = aggr===0; aggr++; return first ? b(e.to) : 'r '+b(e.to); }
     }
   });
@@ -878,7 +892,7 @@ function render(){
 }
 
 /* ================= sheets ================= */
-function closeLayer(){ videoJob.cancel = true; startToken = null; $('#layer').innerHTML = ''; }
+function closeLayer(){ startToken = null; $('#layer').innerHTML = ''; }
 // 同じ枠のグループ(手札2枚、フロップ3枚、ターン、リバー、相手ごとの手札2枚)
 function groupOf(key){
   if(key.indexOf('v_')===0){ const base = key.slice(0, -1); return [base+'0', base+'1']; }
@@ -939,7 +953,7 @@ function openDetail(id){
     '<h2 style="margin-top:22px">記録内容</h2><div class="text">'+esc(toText(h))+'</div>'+
     '</div></div>';
   playReplay($('#rp'), h);
-  prepareVideo(h); // 共有に備えて、動画を裏で先に作っておく
+  if(fastExport()) prepareVideo(h); // 共有に備えて、動画を裏で先に作っておく
 }
 // 共有ボタンを押したらすぐ共有シート(LINEなど)を開けるよう、動画は詳細を開いたときに裏で先に作っておく
 const videoCache = {};    // id -> {sig, blob, ext}
@@ -952,6 +966,8 @@ function cachedVideo(h){
   const c = videoCache[h.id];
   return c && c.sig===videoSig(h) ? c : null;
 }
+// 高速な書き出し(WebCodecs + mp4-muxer)が使えるか。使えない環境では、共有を押したときだけ、実時間で録画する
+function fastExport(){ return !!(window.VideoEncoder && window.VideoFrame && window.Mp4Muxer); }
 function prepareVideo(h){
   const hit = cachedVideo(h);
   if(hit) return Promise.resolve(hit);
@@ -980,11 +996,11 @@ function openShare(id){
   const ready = h && cachedVideo(h);
   $('#layer').innerHTML =
     '<div class="back" data-a="close"><div class="sheet"><h3>共有のしかた</h3>'+
-    '<div class="btns" style="margin-top:0"><button class="btn main" id="btn-video" data-a="sharevideo" data-id="'+id+'">'+(ready ? '動画で共有' : '動画で共有(準備中)')+'</button></div>'+
+    '<div class="btns" style="margin-top:0"><button class="btn main" id="btn-video" data-a="sharevideo" data-id="'+id+'">'+(ready || !fastExport() ? '動画で共有' : '動画で共有(準備中)')+'</button></div>'+
     '<div class="btns" style="margin-top:10px"><button class="btn" data-a="sharetext" data-id="'+id+'">テキストで共有</button></div>'+
     '<div class="btns" style="margin-top:10px"><button class="btn" data-a="open" data-id="'+id+'">戻る</button></div>'+
     '</div></div>';
-  if(h && !ready) prepareVideo(h).then(() => { const b = $('#btn-video'); if(b) b.textContent = '動画で共有'; });
+  if(h && !ready && fastExport()) prepareVideo(h).then(() => { const b = $('#btn-video'); if(b) b.textContent = '動画で共有'; });
 }
 // 準備がまだのとき(または共有シートが使えない環境)の、動画を作って確認する画面
 function startVideo(id){
@@ -1040,6 +1056,16 @@ function shareText(id){
     copy();
   }
 }
+function draftHasContent(){
+  const d = draft;
+  return !!(Object.keys(d.cards).length || STREETS.some(x => d.actions[x].length) || d.sb || d.bb || d.stack || (d.memo && d.memo.trim()));
+}
+function askEdit(id){
+  $('#layer').innerHTML =
+    '<div class="back" data-a="close"><div class="sheet"><h3>入力中の内容が消えます</h3>'+
+    '<p>いま入力しているハンドは、保存されていません。この記録を編集すると、入力中の内容は消えます。</p>'+
+    '<div class="btns"><button class="btn" data-a="close">やめる</button><button class="btn main" data-a="edit" data-force="1" data-id="'+esc(id)+'">編集する</button></div></div></div>';
+}
 function askReset(){
   $('#layer').innerHTML =
     '<div class="back" data-a="close"><div class="sheet"><h3>最初からやり直しますか？</h3>'+
@@ -1077,15 +1103,16 @@ function vCard(ctx, code, x, y, w, h){
 }
 function vBack(ctx, x, y, w, h){ rr(ctx, x, y, w, h, 5); ctx.fillStyle = VC.back; ctx.fill(); }
 function wrapLines(ctx, str, maxW, maxLines){
-  const out = []; let line = '';
+  const all = []; let line = '';
   for(const ch of str){
-    if(ch==='\n'){ out.push(line); line = ''; continue; }
-    if(ctx.measureText(line+ch).width > maxW){ out.push(line); line = ch; } else line += ch;
-    if(out.length>=maxLines) break;
+    if(ch==='\n'){ all.push(line); line = ''; continue; }
+    if(ctx.measureText(line+ch).width > maxW){ all.push(line); line = ch; } else line += ch;
   }
-  if(out.length<maxLines && line) out.push(line);
-  if(out.length>=maxLines && (line || str.length>out.join('').length)) out[maxLines-1] = out[maxLines-1].replace(/.$/, '…');
-  return out.slice(0, maxLines);
+  if(line) all.push(line);
+  if(all.length<=maxLines) return all;
+  const out = all.slice(0, maxLines);
+  out[maxLines-1] = out[maxLines-1].replace(/.$/, '…'); // 入りきらないときだけ、最後に「…」を付ける
+  return out;
 }
 
 // 動画では略号(x/c/f)ではなく、ポーカーを知らなくても分かる語で出す
@@ -1206,7 +1233,7 @@ function drawFrame(ctx, h, sim, f){
 // 再生用の時間割(各コマの長さ)
 function buildTimeline(h){
   const sim = simulate(h);
-  const tl = sim.frames.map(f => ({f:f, dur: f.k==='act' ? 1.2 : (f.k==='street' ? 1.8 : 2.2)}));
+  const tl = sim.frames.map(f => ({f:f, dur: (f.k==='act' || f.k==='refund') ? 1.2 : (f.k==='street' ? 1.8 : 2.2)}));
   const last = sim.frames[sim.frames.length-1];
   tl.push({f:Object.assign({}, last, {k:'end'}), dur: 4});
   return {sim:sim, tl:tl, total: tl.reduce((a,x) => a + x.dur, 0)};
@@ -1255,7 +1282,6 @@ function playReplay(canvas, h){
   requestAnimationFrame(tick);
 }
 // 動画ファイルの書き出し(実時間で録画する。MP4を優先し、使えなければWebM)
-let videoJob = {cancel:false};
 function pickMime(){
   if(!window.MediaRecorder) return '';
   const c = ['video/mp4;codecs=avc1.42E01E','video/mp4','video/webm;codecs=vp9','video/webm'];
@@ -1378,10 +1404,15 @@ function prevStep(){
   }
   go(ids[Math.max(0, ids.indexOf(draft.step)-1)]);
 }
+// 前のストリートを直したら、あとのストリートのアクションは(誰の手番か変わるので)消す
+function clearLater(step){
+  STREETS.slice(STREETS.indexOf(step)+1).forEach(x => { draft.actions[x] = []; });
+}
 function pushAction(act, amt){
   const s = draft.step, sn = simulate(draft).S[s];
   if(!sn.actor) return;
   draft.actions[s].push({pos:sn.actor, act:act, amt:amt||''});
+  clearLater(s);
   draft.raising = false; draft.amt = '';
 }
 
@@ -1401,9 +1432,17 @@ document.addEventListener('click', e => {
     case 'n':
       d.n = +t.dataset.v; d.stacks = {};
       if((POS[d.n]||[]).indexOf(d.heroPos)<0) d.heroPos = '';
-      setupChanged(); break;
+      clearActions(); break; // ボードと相手のハンドも消す
     case 'seat':
-      if(d.step==='setup'){ d.heroPos = d.heroPos===t.dataset.p ? '' : t.dataset.p; break; }
+      if(d.step==='setup'){
+        const np = d.heroPos===t.dataset.p ? '' : t.dataset.p;
+        if(np!==d.heroPos){
+          d.heroPos = np;
+          if(np){ delete d.stacks[np]; delete d.cards['v_'+np+'_0']; delete d.cards['v_'+np+'_1']; } // 自分の席には、相手用のスタックやハンドを残さない
+          setupChanged();
+        }
+        break;
+      }
       if(t.classList.contains('act')) return; // 手番の席はアクションを入力する(スタックは開かない)
       openStack(t.dataset.p); return;
     case 'phase': go(t.dataset.v); return;
@@ -1456,7 +1495,7 @@ document.addEventListener('click', e => {
       pushAction(amt>=maxTo ? 'allin' : (sn.current===0?'bet':'raise'), String(amt));
       break;
     }
-    case 'undo': d.actions[d.step].pop(); d.raising = false; break;
+    case 'undo': d.actions[d.step].pop(); clearLater(d.step); d.raising = false; break;
     case 'result': d.result = t.dataset.v; break;
     case 'tag': {
       const i = d.tags.indexOf(t.dataset.t);
@@ -1472,20 +1511,26 @@ document.addEventListener('click', e => {
     case 'reset': resetDraft(); closeLayer(); render(); window.scrollTo(0,0); return;
     case 'save': {
       const rec = clone(d);
-      delete rec.step; delete rec.amt; delete rec.raising; delete rec.seatMode;
-      if(rec.id){ hands = hands.map(h => h.id===rec.id ? rec : h); }
-      else{ rec.id = 'h'+Date.now(); rec.createdAt = Date.now(); hands.unshift(rec); }
-      save(KEY_HANDS, hands);
+      delete rec.step; delete rec.amt; delete rec.raising;
+      let next;
+      if(rec.id){ next = hands.map(h => h.id===rec.id ? rec : h); }
+      else{ rec.id = 'h'+Date.now(); rec.createdAt = Date.now(); next = [rec].concat(hands); }
+      if(!save(KEY_HANDS, next)){ // 保存できなかったときは、入力内容を残す
+        toast('保存できませんでした。ブラウザの保存機能がオフか、容量がいっぱいです');
+        return;
+      }
+      hands = next;
       resetDraft(); tab = 'rec'; render(); window.scrollTo(0,0);
       toast('保存しました。一覧から共有できます');
-      prepareVideo(rec); // 一覧から共有するときすぐ開けるよう、動画を裏で先に作っておく
+      if(fastExport()) prepareVideo(rec); // 一覧から共有するときすぐ開けるよう、動画を裏で先に作っておく
       return;
     }
     case 'open': openDetail(t.dataset.id); return;
     case 'edit': {
       const h = hands.filter(x => x.id===t.dataset.id)[0];
       if(!h) return;
-      draft = Object.assign(newDraft(), clone(h), {step:'sum'});
+      if(draftHasContent() && !t.dataset.force){ askEdit(h.id); return; } // 入力中の内容が消えるので、確認する
+      draft = normHand(Object.assign({}, clone(h), {step:'sum'}));
       saveDraft(); closeLayer(); tab = 'rec'; render(); window.scrollTo(0,0);
       return;
     }
